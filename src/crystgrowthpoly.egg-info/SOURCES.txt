@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+src/crystgrowthpoly/__init__.py
+src/crystgrowthpoly/growth_function.py
+src/crystgrowthpoly/private.py
+src/crystgrowthpoly/public.py
+src/crystgrowthpoly/visualisation.py
+src/crystgrowthpoly.egg-info/PKG-INFO
+src/crystgrowthpoly.egg-info/SOURCES.txt
+src/crystgrowthpoly.egg-info/dependency_links.txt
+src/crystgrowthpoly.egg-info/top_level.txt
