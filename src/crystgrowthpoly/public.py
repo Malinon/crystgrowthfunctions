@@ -143,27 +143,22 @@ class Tesselation:
                 print("***************************")
 
 
-"""
-If crystalographic_coordinates is set True, then cartesian_vectors_included is ignored
-"""
-def read_tessellation_from_file(file_path, crystalographic_coordinates=True, cartesian_vectors_included=True):
+def read_tessellation_from_file(file_path, cartesian_vectors_included=True):
     input_file = open(file_path, 'r')
     lines = input_file.readlines()
+    input_file.close()
     cells_nums = tuple(int(s) for s in re.findall(r"\d+", lines[0]))
-    cartesian_v1 = None
-    cartesian_v2 = None
+    cartesian_vectors = None
     if cartesian_vectors_included:
         cartesian_v1 = cryst_private.string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 1])
         cartesian_v2 = cryst_private.string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 2])
-    if crystalographic_coordinates:
-        points = [cryst_private.string_to_point(lines[i]) for i in range(1, cells_nums[0] + 1)]
-        v1 = (1, 0)
-        v2 = (0, 1)
-    else:
-        v1 = cartesian_v1
-        v2 = cartesian_v2
-        points = tuple(multiply_by_scalar_and_add([v1, v2], string_to_point(lines[i])) for i in range(1, cells_nums[0] + 1))
-        cartesian_vectors = (v1, v2)
-    edges = tuple(cryst_private.string_to_cell(lines[i], points) for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1))
-    faces = tuple(cryst_private.string_to_cell(lines[i], points) for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1))
-    return Tesselation(Polygon(points, edges, faces), v1, v2, (cartesian_v1, cartesian_v2))
+        cartesian_vectors = (cartesian_v1, cartesian_v2)
+    points = tuple(cryst_private.string_to_point(lines[i])
+              for i in range(1, cells_nums[0] + 1))
+    v1 = (1, 0)
+    v2 = (0, 1)
+    edges = tuple(cryst_private.string_to_cell(lines[i], points)
+                  for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1))
+    faces = tuple(cryst_private.string_to_cell(lines[i], points)
+                  for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1))
+    return Tesselation(Polygon(points, edges, faces), v1, v2, cartesian_vectors)
