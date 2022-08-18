@@ -1,4 +1,5 @@
 import crystgrowthpoly.private as cryst_private
+from sage.all import *
 import itertools
 
 def find_mantisse(tes, coordinate, is_vertical):
@@ -83,10 +84,6 @@ class SpecialPoint:
         if self.cartesian_point == None:
             self.cartesian_point = vector(self.point) * matrix((v1, v2))
         return point(self.cartesian_point + vector(translation), color =color, size = 20, zorder=2)
-    def __eq__(self, other):
-        return self.point == other.point
-    def __hash__(self):
-        return hash(self.point)
     def get_point(self):
         return self.point
     def set_growth_function(self, tes, symmetric_frame):
@@ -112,9 +109,10 @@ def calculate_mantisse(x):
 def find_regions(tessellation, symmetric_frame=True, full_plot=False):
     points = tessellation.polygon.points
     tes = set()
+    # Create fragment of tessellation
     for k in range(-1, 4):
         for l in range(-1, 4):
-            add_cells(tes, points, multiply_by_scalar_and_add([(1,0), (0,1)], [k, l]), translate_vector)
+            cryst_private.add_cells(tes, points, cryst_private.multiply_by_scalar_and_add([(1,0), (0,1)], [k, l]), cryst_private.translate_vector)
     x_endpoints = find_boundary_lines(tes, True)
     y_endpoints = find_boundary_lines(tes, False)
 
