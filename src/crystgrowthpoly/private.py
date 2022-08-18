@@ -177,3 +177,11 @@ def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2,
         for j in range(-2 , (m+2) * scale_v2):
             add_cells_censored(cells_in_tesselation, cells, multiply_by_scalar_and_add([v1, v2], [i, j]), move_operator, censor)
     return len(cells_in_tesselation)
+
+def string_to_point(input_string):
+    coord_strings = input_string.split()
+    return vector((sage_eval(coord_strings[0]), sage_eval(coord_strings[1])), immutable=True)
+
+def string_to_cell(input_string, points):
+    coord_strings = input_string.split()
+    return tuple(points[int(num_str) - 1] for num_str in coord_strings)

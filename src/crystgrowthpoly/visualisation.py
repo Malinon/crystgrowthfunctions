@@ -1,4 +1,4 @@
-from crystgrowthpoly.private import *
+import crystgrowthpoly.private as cryst_private
 import itertools
 
 def find_mantisse(tes, coordinate, is_vertical):
@@ -145,7 +145,7 @@ def find_regions(tessellation, symmetric_frame=True, full_plot=False):
     for k in range(floor(min_x), ceil(max_x)):
         for l in range(floor(min_y), ceil(max_y)):
             G = G +  sum(rect.to_graphic_polygon(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d[rect.get_polynomials()],
-                                                                multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for rect in found_rectangles)
+                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for rect in found_rectangles)
     #print("Main plot is ready")
     if full_plot:
         G_lines = Graphics()
@@ -163,9 +163,9 @@ def find_regions(tessellation, symmetric_frame=True, full_plot=False):
         for k in range(floor(min_x), ceil(max_x)):
             for l in range(floor(min_y), ceil(max_y)):
                 G_lines = G_lines +  sum(line.plot(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d2[line.get_polynomials()],
-                                                                multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for line in lines_list)
+                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for line in lines_list)
                 G_points = G_points +  sum(p.plot(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d2[p.get_polynomials()],
-                                                                multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for p in points_list)
+                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for p in points_list)
         for poly in polynomials_lines_points:
             polynomials.add(poly)
     description_dic = dict( (polys, []) for polys in polynomials )

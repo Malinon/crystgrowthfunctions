@@ -1,10 +1,7 @@
-# TODO: Remove impoert * (maybe sage can stay)
-
-from crystgrowthpoly.private import *
-from crystgrowthpoly.visualisation import *
+import crystgrowthpoly.private as cryst_private
+import crystgrowthpoly.visualisation as cryst_visualisation
 import crystgrowthpoly.growth_function as gf
 import re
-import math
 from sage.all import *
 
 """
@@ -20,15 +17,15 @@ def get_topological_growth_polynomials(points, num_of_2_cells, v1, v2, symmetric
     if symmetric_frame:
         args = (2, 3, 4)
         variables_num = 1
-        gen_val = lambda arg: get_0_cells_num(arg, arg, points, v1, v2)
-        polynomial_0_cells_coeff = find_poly(gen_val, args)[0]
+        gen_val = lambda arg: cryst_private.get_0_cells_num(arg, arg, points, v1, v2)
+        polynomial_0_cells_coeff = cryst_private.find_poly(gen_val, args)[0]
         polynomial_2_cells_coeff = (num_of_2_cells, 0, 0)
         polynomial_1_cells_coeff = (polynomial_0_cells_coeff[0] + num_of_2_cells, polynomial_0_cells_coeff[1], polynomial_0_cells_coeff[2] - 1)
     else:
-        gen_val = lambda arg: get_0_cells_num(arg[0], arg[1], points, v1, v2)
+        gen_val = lambda arg: cryst_private.get_0_cells_num(arg[0], arg[1], points, v1, v2)
         args = ((2,2), (2,3), (3,2), (3,3))
         variables_num = 2
-        polynomial_0_cells_coeff = find_poly_2_variables(gen_val, args)[0]
+        polynomial_0_cells_coeff = cryst_private.find_poly_2_variables(gen_val, args)[0]
         polynomial_2_cells_coeff = (num_of_2_cells, 0, 0,0)
         polynomial_1_cells_coeff = (polynomial_0_cells_coeff[0] + num_of_2_cells, polynomial_0_cells_coeff[1],
                                     polynomial_0_cells_coeff[2], polynomial_0_cells_coeff[3] - 1)
@@ -56,25 +53,29 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
     except TypeError:
         raise TypeError("Frame scale need to be rational number")
     # Find point equivalent to x0 near provided figure
-    params = column_matrix([v1, v2]).solve_right(vector(subtract_vectors(points[0], x0)))
-    x0_equivalent = translate_vector(translate_vector(x0, multiply_vector(v1, floor(params[0]))),  multiply_vector(v2, floor(params[1])))
+    params = column_matrix([v1, v2]).solve_right(vector(cryst_private.subtract_vectors(points[0], x0)))
+    x0_equivalent = cryst_private.translate_vector(cryst_private.translate_vector(x0, cryst_private.multiply_vector(v1, floor(params[0]))),
+                                                   cryst_private.multiply_vector(v2, floor(params[1])))
 
 
-    v1_frame = multiply_vector(v1, frame_scale_v1)
-    v2_frame = multiply_vector(v2, frame_scale_v2)
+    v1_frame = cryst_private.multiply_vector(v1, frame_scale_v1)
+    v2_frame = cryst_private.multiply_vector(v2, frame_scale_v2)
     polynomials_0_cells = []
     polynomials_1_cells = []
     polynomials_2_cells = []
     if in_one_variable:
         N = lcm(rational_scale_v1.denominator(), rational_scale_v2.denominator())
         if N == 1:
-            polynomial_finder = find_poly_par
+            polynomial_finder = cryst_private.find_poly_par
         else:
-            polynomial_finder = find_poly
+            polynomial_finder = cryst_private.find_poly
         # Prepare functions calculating numbers of cells
-        gen_num_of_0_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[0], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
-        gen_num_of_1_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[0], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
-        gen_num_of_2_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[0], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+        gen_num_of_0_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[0], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+        gen_num_of_1_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[0], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+        gen_num_of_2_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[0], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
         for s in range(N):
             args = tuple((N*i + s,) for i in range(2,5) )
             # Find growth polynomials
@@ -86,12 +87,15 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
         K = rational_scale_v1.denominator()
         L = rational_scale_v2.denominator()
         if K == 1 and L == 1:
-            polynomial_finder = find_poly_par
+            polynomial_finder = cryst_private.find_poly_par
         else:
-            polynomial_finder = find_poly_2_variables
-        gen_num_of_0_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[1], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
-        gen_num_of_1_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[1], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
-        gen_num_of_2_cells = lambda arg: get_k_cells_num_parallelogram(arg[0], arg[1], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            polynomial_finder = cryst_private.find_poly_2_variables
+        gen_num_of_0_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[1], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+        gen_num_of_1_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[1], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+        gen_num_of_2_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
+            arg[0], arg[1], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
         for s_k in range(K):
             for s_l in range(L):
                 args = tuple( (s_k + arg[0] * K, s_l + arg[1] * L)  for arg in ((2,2), (2,3), (3,2), (3,3)))
@@ -103,8 +107,8 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
 class Polygon:
     def __init__(self,points, edges, faces):
         self.points = points
-        self.edges = tuple(sort_points_in_cell(edge) for edge in edges)
-        self.faces = tuple(sort_points_in_cell(face) for face in faces)
+        self.edges = tuple(cryst_private.sort_points_in_cell(edge) for edge in edges)
+        self.faces = tuple(cryst_private.sort_points_in_cell(face) for face in faces)
 
 class Tesselation:
     def __init__(self, polygon, v1, v2, cartesian_tesselation_vectors=None):
@@ -123,7 +127,7 @@ class Tesselation:
         get_edge_in_cartesian_coordinates = lambda edge: (vector(edge[0]) * coord_matrix, vector(edge[1]) * coord_matrix)
         return sum( line(get_edge_in_cartesian_coordinates(e), color="black") for e in self.polygon.edges)
     def plot_domains(self, symmetric_growth = True, full_plot=False, description = True):
-        regions = find_regions(self, symmetric_growth, full_plot=full_plot)
+        regions = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot)
         own_plot = self.plot_edges()
         (regions.parallelograms_plot + own_plot).show(aspect_ratio=1, axes=False)
         if full_plot:
@@ -139,17 +143,6 @@ class Tesselation:
                 print("***************************")
 
 
-def string_to_point(input_string):
-    coord_strings = input_string.split()
-    return vector((sage_eval(coord_strings[0]), sage_eval(coord_strings[1])), immutable=True)
-
-
-
-def string_to_cell(input_string, points):
-    coord_strings = input_string.split()
-    return tuple(points[int(num_str) - 1] for num_str in coord_strings)
-
-
 """
 If crystalographic_coordinates is set True, then cartesian_vectors_included is ignored
 """
@@ -160,10 +153,10 @@ def read_tessellation_from_file(file_path, crystalographic_coordinates=True, car
     cartesian_v1 = None
     cartesian_v2 = None
     if cartesian_vectors_included:
-        cartesian_v1 = string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 1])
-        cartesian_v2 = string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 2])
+        cartesian_v1 = cryst_private.string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 1])
+        cartesian_v2 = cryst_private.string_to_point(lines[ cells_nums[0] + cells_nums[1] + cells_nums[2] + 2])
     if crystalographic_coordinates:
-        points = [string_to_point(lines[i]) for i in range(1, cells_nums[0] + 1)]
+        points = [cryst_private.string_to_point(lines[i]) for i in range(1, cells_nums[0] + 1)]
         v1 = (1, 0)
         v2 = (0, 1)
     else:
@@ -171,6 +164,6 @@ def read_tessellation_from_file(file_path, crystalographic_coordinates=True, car
         v2 = cartesian_v2
         points = tuple(multiply_by_scalar_and_add([v1, v2], string_to_point(lines[i])) for i in range(1, cells_nums[0] + 1))
         cartesian_vectors = (v1, v2)
-    edges = tuple(string_to_cell(lines[i], points) for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1))
-    faces = tuple(string_to_cell(lines[i], points) for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1))
+    edges = tuple(cryst_private.string_to_cell(lines[i], points) for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1))
+    faces = tuple(cryst_private.string_to_cell(lines[i], points) for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1))
     return Tesselation(Polygon(points, edges, faces), v1, v2, (cartesian_v1, cartesian_v2))
