@@ -20,7 +20,6 @@ def add_cells(cells_in_tesselation, cells, vec, move_operator):
     for c in cells:
         cells_in_tesselation.add(move_operator(c, vec))
 
-
 """
 Add cells to tesselation model and count number of new cells
 
@@ -134,7 +133,7 @@ INVERSED_LEFT_SIDE_MATRIX_2_VARIABLES = matrix((( 1, -3, -3,  9),
 ( 1, -2, -2,  4)))
 def find_poly_2_variables(gen_val, args):
     value_vector = matrix(1,(gen_val(arg) for arg in args))
-    return value_vector * INVERSED_LEFT_SIDE_MATRIX_2D
+    return value_vector * INVERSED_LEFT_SIDE_MATRIX_2_VARIABLES
 
 """
 @param gen_val Function generating value of polynomial in given points

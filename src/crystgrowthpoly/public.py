@@ -5,7 +5,6 @@ from crystgrowthpoly.visualisation import *
 import crystgrowthpoly.growth_function as gf
 import re
 import math
-import numpy as np
 from sage.all import *
 
 """
@@ -16,14 +15,26 @@ Function finding growth polynomials
 @param v1  tesselation vector
 @param v2  tesselation vector
 """
-def get_topological_growth_polynomials(points, num_of_2_cells, v1, v2):
+def get_topological_growth_polynomials(points, num_of_2_cells, v1, v2, symmetric_frame=True):
     # Generate function calculating number of 0-cells in given step of tesselation
-    gen_val = lambda arg: get_0_cells_num(arg[0], arg[1], points, v1, v2)
-    args = ((1,1), (1,2), (2,1), (2,2))
-    polynomial_0_cells_coeff = find_poly(gen_val, args)[0]
-    polynomial_2_cells_coeff = (0, 0, num_of_2_cells)
-    polynomial_1_cells =  (polynomial_0_cells[0] - 1, polynomial_0_cells[1], polynomial_0_cells[2], polynomial_0_cells[3] + num_of_2_cells)
-    return (gf.growth_function(polynomials_0_cells, 2, 0, (1, 1)), gf.growth_function(polynomials_0_cells, 2, 1, (1, 1)), gf.growth_function(polynomials_0_cells, 2, 2, (1, 1)))
+    if symmetric_frame:
+        args = (2, 3, 4)
+        variables_num = 1
+        gen_val = lambda arg: get_0_cells_num(arg, arg, points, v1, v2)
+        polynomial_0_cells_coeff = find_poly(gen_val, args)[0]
+        polynomial_2_cells_coeff = (num_of_2_cells, 0, 0)
+        polynomial_1_cells_coeff = (polynomial_0_cells_coeff[0] + num_of_2_cells, polynomial_0_cells_coeff[1], polynomial_0_cells_coeff[2] - 1)
+    else:
+        gen_val = lambda arg: get_0_cells_num(arg[0], arg[1], points, v1, v2)
+        args = ((2,2), (2,3), (3,2), (3,3))
+        variables_num = 2
+        polynomial_0_cells_coeff = find_poly_2_variables(gen_val, args)[0]
+        polynomial_2_cells_coeff = (num_of_2_cells, 0, 0,0)
+        polynomial_1_cells_coeff = (polynomial_0_cells_coeff[0] + num_of_2_cells, polynomial_0_cells_coeff[1],
+                                    polynomial_0_cells_coeff[2], polynomial_0_cells_coeff[3] - 1)
+    return (gf.growth_function((polynomial_0_cells_coeff,), variables_num, 0),
+            gf.growth_function((polynomial_1_cells_coeff,), variables_num, 1),
+            gf.growth_function((polynomial_2_cells_coeff,), variables_num, 2))
 
 
 """
@@ -55,7 +66,7 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
     polynomials_1_cells = []
     polynomials_2_cells = []
     if in_one_variable:
-        N = lcm(rational_scale_v1.denominator(), rational_scale_v1.denominator())
+        N = lcm(rational_scale_v1.denominator(), rational_scale_v2.denominator())
         if N == 1:
             polynomial_finder = find_poly_par
         else:
@@ -92,10 +103,8 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
 class Polygon:
     def __init__(self,points, edges, faces):
         self.points = points
-        self.edges = [sort_points_in_cell(edge) for edge in edges]
-        self.faces = [sort_points_in_cell(face) for face in faces]
-        self.faces_raw = faces # Positive oriented figures are needed for triangulation, which is performed during visualisation 
-
+        self.edges = tuple(sort_points_in_cell(edge) for edge in edges)
+        self.faces = tuple(sort_points_in_cell(face) for face in faces)
 
 class Tesselation:
     def __init__(self, polygon, v1, v2, cartesian_tesselation_vectors=None):
@@ -104,10 +113,11 @@ class Tesselation:
         self.v2 = v2
         self.cartesian_vectors = cartesian_tesselation_vectors
     def get_growth_polynomials_parallelogram(self, scale_v1 = 1, scale_v2 = 1, x0 = (0,0), symmetric_frame=True):
-        return get_crystalographic_growth_functions(self.polygon.points, self.polygon.edges, self.polygon.faces, self.v1, self.v2, x0, frame_scale_v1 = scale_v1, frame_scale_v2 = scale_v2,
+        return get_crystalographic_growth_functions(self.polygon.points, self.polygon.edges, self.polygon.faces, self.v1, self.v2, x0,
+                                                    frame_scale_v1 = scale_v1, frame_scale_v2 = scale_v2,
                                                    in_one_variable=symmetric_frame)
-    def get_growth_polynomials(self):
-        return get_topological_growth_polynomials(self.polygon.points, len(self.polygon.faces), self.v1, self.v2)
+    def get_growth_polynomials(self, symmetric_frame=True):
+        return get_topological_growth_polynomials(self.polygon.points, len(self.polygon.faces), self.v1, self.v2, symmetric_frame)
     def plot_edges(self):
         coord_matrix = matrix(self.cartesian_vectors)
         get_edge_in_cartesian_coordinates = lambda edge: (vector(edge[0]) * coord_matrix, vector(edge[1]) * coord_matrix)
@@ -146,7 +156,7 @@ If crystalographic_coordinates is set True, then cartesian_vectors_included is i
 def read_tessellation_from_file(file_path, crystalographic_coordinates=True, cartesian_vectors_included=True):
     input_file = open(file_path, 'r')
     lines = input_file.readlines()
-    cells_nums = [int(s) for s in re.findall(r"\d+", lines[0])]
+    cells_nums = tuple(int(s) for s in re.findall(r"\d+", lines[0]))
     cartesian_v1 = None
     cartesian_v2 = None
     if cartesian_vectors_included:
@@ -159,8 +169,8 @@ def read_tessellation_from_file(file_path, crystalographic_coordinates=True, car
     else:
         v1 = cartesian_v1
         v2 = cartesian_v2
-        points = [multiply_by_scalar_and_add([v1, v2], string_to_point(lines[i])) for i in range(1, cells_nums[0] + 1)]
+        points = tuple(multiply_by_scalar_and_add([v1, v2], string_to_point(lines[i])) for i in range(1, cells_nums[0] + 1))
         cartesian_vectors = (v1, v2)
-    edges = [string_to_cell(lines[i], points) for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1)]
-    faces = [string_to_cell(lines[i], points) for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1)]
+    edges = tuple(string_to_cell(lines[i], points) for i in range(1+cells_nums[0], cells_nums[0] + cells_nums[1] + 1))
+    faces = tuple(string_to_cell(lines[i], points) for i in range(1+cells_nums[0] + cells_nums[1], cells_nums[0] + cells_nums[1] + cells_nums[2] + 1))
     return Tesselation(Polygon(points, edges, faces), v1, v2, (cartesian_v1, cartesian_v2))
