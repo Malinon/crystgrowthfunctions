@@ -77,32 +77,22 @@ def sort_points_in_cell(cell):
 """
 Returns function for checking if point is inside parallelogram
 """
-def gen_is_point_in_parallelogram(n, m, v1, v2, x0):
-    left_side_matrix_inversed = ~column_matrix([multiply_vector(v1, n), multiply_vector(v2, m)])
-    return (lambda point: all(a[0] >= 0 and a[0] <= 1 for a in  left_side_matrix_inversed * column_matrix(SR, [subtract_vectors(point, x0)])))
+def gen_is_point_in_parallelogram(n, m, scale_v1, scale_v2, x0):
+    limiter_n = n * scale_v1
+    limiter_m = m * scale_v2
+    def is_point_in_parallelogram(point):
+        vec  = subtract_vectors(point, x0)
+        return  0 <= vec[0] and 0 <= vec[1] and vec[0] <= limiter_n and vec[1] <= limiter_m
+    return  is_point_in_parallelogram
 
 
 """
 Returns function for checking if cell is inside parallelogram defined by
 """
-def gen_is_face_in_parallelogram(n, m, v1, v2, x0):
-    is_point_in_parallelogram = gen_is_point_in_parallelogram(n, m, v1, v2, x0)
+def gen_is_face_in_parallelogram(n, m, scale_v1, scale_v2, x0):
+    is_point_in_parallelogram = gen_is_point_in_parallelogram(n, m, scale_v1, scale_v2, x0)
     return (lambda face: all(is_point_in_parallelogram(point) for point in face))
 
-"""
-Returns function for checking if point is inside parallelogram
-"""
-def gen_is_point_in_parallelogram(n, m, v1, v2, x0):
-    left_side_matrix_inversed = ~column_matrix([multiply_vector(v1, n), multiply_vector(v2, m)])
-    return (lambda point: all(a[0] >= 0 and a[0] <= 1 for a in  left_side_matrix_inversed * column_matrix(SR, [subtract_vectors(point, x0)])))
-
-
-"""
-Returns function for checking if cell is inside parallelogram defined by point x0 and vectors v1, v2
-"""
-def gen_is_face_in_parallelogram(n, m, v1, v2, x0):
-    is_point_in_parallelogram = gen_is_point_in_parallelogram(n, m, v1, v2, x0)
-    return (lambda face: all(is_point_in_parallelogram(point) for point in face))
 
 INVERSED_LEFT_SIDE_MATRIX_2D = matrix((( 1/2,   -7/2,  6),
 (-1,    6, -8),
@@ -167,11 +157,11 @@ def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2,
     cells_in_tesselation = set()
     if k == 0:
         # Count 0 cells
-        censor = gen_is_point_in_parallelogram(n, m, frame_v1, frame_v2, x0)
+        censor = gen_is_point_in_parallelogram(n, m, scale_v1, scale_v2, x0)
         move_operator = translate_vector
     else:
         # Count 1 or 2 cells
-        censor = gen_is_face_in_parallelogram(n, m,  frame_v1, frame_v2, x0)
+        censor = gen_is_face_in_parallelogram(n, m, scale_v1, scale_v2, x0)
         move_operator = translate_face
     for i in range(-2 , (n+2) * scale_v1):
         for j in range(-2 , (m+2) * scale_v2):
