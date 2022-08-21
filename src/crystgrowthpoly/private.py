@@ -94,18 +94,6 @@ def gen_is_face_in_parallelogram(n, m, scale_v1, scale_v2, x0):
     return (lambda face: all(is_point_in_parallelogram(point) for point in face))
 
 
-INVERSED_LEFT_SIDE_MATRIX_2D = matrix((( 1/2,   -7/2,  6),
-(-1,    6, -8),
-(1/2,   -5/2,    3) ))
-"""
-@param gen_val Function generating value of polynomial in given points
-
-"""
-def find_poly(gen_val, args):
-    value_vector = matrix(1,[gen_val(arg) for arg in args])
-    return  value_vector * INVERSED_LEFT_SIDE_MATRIX_2D
-
-
 """
 Creates matrix and return its inverse
 @param gen_val Function generating value of polynomial in given points
@@ -117,20 +105,12 @@ def generate_inversed_matrix(args):
     else:
         return ~matrix(((arg[0]*arg[1], arg[0], arg[1], 1) for arg in args))
 
-INVERSED_LEFT_SIDE_MATRIX_2_VARIABLES = matrix((( 1, -3, -3,  9),
-(-1,  2,  3, -6),
-(-1,  3,  2, -6),
-( 1, -2, -2,  4)))
-def find_poly_2_variables(gen_val, args):
-    value_vector = matrix(1,(gen_val(arg) for arg in args))
-    return value_vector * INVERSED_LEFT_SIDE_MATRIX_2_VARIABLES
-
 """
 @param gen_val Function generating value of polynomial in given points
 
 """
-def find_poly_par(gen_val, args):
-    value_vector = column_matrix(1,(gen_val(arg) for arg in args))
+def find_poly(gen_val, args):
+    value_vector = column_matrix((gen_val(arg) for arg in args))
     mat = generate_inversed_matrix(args)
     return (mat * value_vector).transpose()
 
