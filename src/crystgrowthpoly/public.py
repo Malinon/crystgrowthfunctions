@@ -19,7 +19,7 @@ def get_topological_growth_polynomials(points, num_of_2_cells, v1, v2, symmetric
         variables_num = 1
         gen_val = lambda arg: cryst_private.get_0_cells_num(arg[0], arg[0], points, v1, v2)
         polynomial_0_cells_coeff = cryst_private.find_poly(gen_val, args)[0]
-        polynomial_2_cells_coeff = (num_of_2_cells, 0, 0)S
+        polynomial_2_cells_coeff = (num_of_2_cells, 0, 0)
         polynomial_1_cells_coeff = (polynomial_0_cells_coeff[0] + num_of_2_cells, polynomial_0_cells_coeff[1], polynomial_0_cells_coeff[2] - 1)
     else:
         gen_val = lambda arg: cryst_private.get_0_cells_num(arg[0], arg[1], points, v1, v2)
@@ -58,6 +58,7 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
                                                    cryst_private.multiply_vector(v2, floor(params[1])))
     v1_frame = cryst_private.multiply_vector(v1, frame_scale_v1)
     v2_frame = cryst_private.multiply_vector(v2, frame_scale_v2)
+    limits_extenders  = cryst_private.get_limits_extenders(x0_equivalent, points)
     polynomials_0_cells = []
     polynomials_1_cells = []
     polynomials_2_cells = []
@@ -65,11 +66,11 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
         N = lcm(rational_scale_v1.denominator(), rational_scale_v2.denominator())
         # Prepare functions calculating numbers of cells
         gen_num_of_0_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[0], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[0], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         gen_num_of_1_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[0], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[0], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         gen_num_of_2_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[0], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[0], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         for s in range(N):
             args = tuple((N*i + s,) for i in range(2,5) )
             # Find growth polynomials
@@ -81,11 +82,11 @@ def get_crystalographic_growth_functions(points, edges, faces, v1, v2, x0, frame
         K = rational_scale_v1.denominator()
         L = rational_scale_v2.denominator()
         gen_num_of_0_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[1], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[1], points, v1, v2, 0, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         gen_num_of_1_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[1], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[1], edges, v1, v2, 1, x0_equivalent, ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         gen_num_of_2_cells = lambda arg: cryst_private.get_k_cells_num_parallelogram(
-            arg[0], arg[1], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame)
+            arg[0], arg[1], faces, v1, v2, 2, x0_equivalent,ceil(frame_scale_v1), ceil(frame_scale_v2), v1_frame, v2_frame, limits_extenders)
         for s_k in range(K):
             for s_l in range(L):
                 args = tuple( (s_k + arg[0] * K, s_l + arg[1] * L)  for arg in ((2,2), (2,3), (3,2), (3,3)))

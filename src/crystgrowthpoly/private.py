@@ -133,7 +133,7 @@ def get_0_cells_num(n,m, points, v1, v2):
             add_cells(points_in_tesselation, points, multiply_by_scalar_and_add([v1, v2], [i, j]), translate_vector)
     return len(points_in_tesselation)
 
-def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2, frame_v1, frame_v2):
+def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2, frame_v1, frame_v2, additional_limits):
     cells_in_tesselation = set()
     if k == 0:
         # Count 0 cells
@@ -143,8 +143,8 @@ def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2,
         # Count 1 or 2 cells
         censor = gen_is_face_in_parallelogram(n, m, scale_v1, scale_v2, x0)
         move_operator = translate_face
-    for i in range(-2 , (n+2) * scale_v1):
-        for j in range(-2 , (m+2) * scale_v2):
+    for i in range(-additional_limits[0][0] , (n + additional_limits[0][1]) * scale_v1):
+        for j in range(-additional_limits[1][0] , (m + additional_limits[0][1]) * scale_v2):
             add_cells_censored(cells_in_tesselation, cells, multiply_by_scalar_and_add([v1, v2], [i, j]), move_operator, censor)
     return len(cells_in_tesselation)
 
@@ -155,3 +155,31 @@ def string_to_point(input_string):
 def string_to_cell(input_string, points):
     coord_strings = input_string.split()
     return tuple(points[int(num_str) - 1] for num_str in coord_strings)
+
+"""
+@brief This function check how many additional translations need to be performed.
+
+@param x0 Anchor point of the frame
+@param points Vertices in repeating motif
+"""
+def get_limits_extenders(x0, points):
+    max_v1 = 0
+    min_v1 = 0
+    max_v2 = 0
+    min_v2 = 0
+    for p in points:
+        if p[0] > max_v1:
+            max_v1 = p[0]
+        elif p[0] < min_v1:
+            min_v1 = p[0]
+            if min_v1 in ZZ:
+                min_v1 = min_v1 -1
+        if p[1] > max_v2:
+            max_v2 = p[1]
+        elif p[1] < min_v2:
+            min_v2 = p[1]
+            if min_v2 in ZZ:
+                min_v2 = min_v2 - 1
+    return ((floor(max_v1), -floor(min_v1)), (floor(max_v2), -floor(min_v2)))
+        
+        
