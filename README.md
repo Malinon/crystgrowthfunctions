@@ -8,6 +8,7 @@ Definition of growth functions and basic information about the package you can f
 
 
 # Implemented features
+
 1. Finding topological growth functions
 2. Finding crystallographic growth functions
     * For frames defined by translation vectors
