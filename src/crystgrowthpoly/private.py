@@ -51,8 +51,8 @@ Multiplies vectors by scalars and add them.
 @param scalars List of scalars
 """
 def multiply_by_scalar_and_add(vectors, scalars):
-    dim = len(vectors)
-    return tuple( sum( vectors[j][i] *scalars[j]  for j in range(dim))   for i in range(dim))
+    dim = len(vectors[0])
+    return tuple( sum( vectors[j][i] *scalars[j]  for j in range(len(vectors)))   for i in range(dim))
 
 """
 Return difference of two vectors

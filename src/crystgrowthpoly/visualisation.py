@@ -106,7 +106,7 @@ def calculate_mantisse(x):
 # I only need to consider changes in points. Cell changes frames iff one f its points changes frame
 
 
-def find_regions(tessellation, symmetric_frame=True, full_plot=False):
+def find_regions(tessellation, symmetric_frame=True, full_plot=False, repetition_of_unit_cells=None):
     points = tessellation.polygon.points
     tes = set()
     # Create fragment of tessellation
@@ -135,10 +135,16 @@ def find_regions(tessellation, symmetric_frame=True, full_plot=False):
     colors = rainbow(len(polynomials))
     d = dict(zip(polynomials, colors))
         #print(rec.get_random_point()).translate
-    max_x = max(tessellation.polygon.points, key = lambda p: p[0])[0]
-    min_x = min(tessellation.polygon.points, key = lambda p: p[0])[0]
-    min_y = min(tessellation.polygon.points, key = lambda p: p[1])[1]
-    max_y = max(tessellation.polygon.points, key = lambda p: p[1])[1]
+    if repetition_of_unit_cells == None:
+        max_x = max(tessellation.polygon.points, key = lambda p: p[0])[0]
+        min_x = min(tessellation.polygon.points, key = lambda p: p[0])[0]
+        min_y = min(tessellation.polygon.points, key = lambda p: p[1])[1]
+        max_y = max(tessellation.polygon.points, key = lambda p: p[1])[1]
+    else:
+        min_x = repetition_of_unit_cells[0][0]
+        max_x = repetition_of_unit_cells[0][1]
+        min_y = repetition_of_unit_cells[1][0]
+        max_y = repetition_of_unit_cells[1][1]
     G = Graphics()
     for k in range(floor(min_x), ceil(max_x)):
         for l in range(floor(min_y), ceil(max_y)):

@@ -113,16 +113,52 @@ class Tesselation:
                                                    in_one_variable=symmetric_frame)
     def get_growth_polynomials(self, symmetric_frame=True):
         return get_topological_growth_polynomials(self.polygon.points, len(self.polygon.faces), self.v1, self.v2, symmetric_frame)
-    def plot_edges(self):
+    def plot_edges(self, repetition_of_polygon):
+        if repetition_of_polygon == None:
+            repetition_of_polygon = ((0,0), (0,0))
         coord_matrix = matrix(self.cartesian_vectors)
         get_edge_in_cartesian_coordinates = lambda edge: (vector(edge[0]) * coord_matrix, vector(edge[1]) * coord_matrix)
-        return sum( line(get_edge_in_cartesian_coordinates(e), color="black") for e in self.polygon.edges)
-    def plot_domains(self, symmetric_growth = True, full_plot=False, description = True):
-        regions = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot)
-        own_plot = self.plot_edges()
-        (regions.parallelograms_plot + own_plot).show(aspect_ratio=1, axes=False)
+        G = Graphics()
+        for i in range(repetition_of_polygon[0][0],  repetition_of_polygon[0][1] + 1):
+            for j in range(repetition_of_polygon[1][0],  repetition_of_polygon[1][1] + 1):
+                G = G + sum( line(get_edge_in_cartesian_coordinates(cryst_private.translate_face(e, (i,j))), color="black" )
+                            for e in self.polygon.edges)
+        return G
+    def plot_domains(self, symmetric_growth = True, full_plot=False, description = True, export_format=None, file_name_sufix = "",
+                    xmin=None, xmax=None, ymin=None, ymax=None, repetition_of_unit_cells = None, repetition_of_polygon = None, fit_image=False):
+        regions = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot, repetition_of_unit_cells=repetition_of_unit_cells)
+        own_plot = self.plot_edges(repetition_of_polygon)
+        plot_parallelogram = (regions.parallelograms_plot + own_plot)
+        if fit_image:
+            polygon_vertice1 = cryst_private.multiply_by_scalar_and_add(self.cartesian_vectors,
+                                                                   (repetition_of_unit_cells[0][0], repetition_of_unit_cells[1][0]))
+            polygon_vertice2 = cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.cartesian_vectors[1],
+                                                                                                    repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]))
+            margin = max(abs(plot_parallelogram.xmin() - plot_parallelogram.xmax()), abs(plot_parallelogram.ymin() - plot_parallelogram.ymax())) * 0.01
+            censoring_polygon = polygon(((plot_parallelogram.xmin() - margin, plot_parallelogram.ymin() - margin),
+                            (plot_parallelogram.xmax()  +margin, plot_parallelogram.ymin() - margin),
+                            (plot_parallelogram.xmax()  + margin, plot_parallelogram.ymax()  + margin),
+                            (plot_parallelogram.xmin() - margin, plot_parallelogram.ymax() + margin),
+                            polygon_vertice2,
+                            cryst_private.multiply_by_scalar_and_add((polygon_vertice1, self.cartesian_vectors[0], self.cartesian_vectors[1]),
+                                                                    (1, repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0],
+                                                                     repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]) ),
+                            cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.cartesian_vectors[0],
+                                                                                                    repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0])),
+                            polygon_vertice1,
+                            polygon_vertice2, (plot_parallelogram.xmin() - margin, plot_parallelogram.ymax() + margin)), color="white", zorder=5)
+            plot_parallelogram =  censoring_polygon + plot_parallelogram
+        plot_parallelogram.show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax,
+                                ymin = ymin, ymax = ymax)
+        if export_format != None:
+            plot_parallelogram.save("domains_parallelogram" + file_name_sufix + "." + export_format,
+                                   xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, axes=False)
         if full_plot:
-            (own_plot + regions.edges_plot + regions.corners_plot).show(aspect_ratio=1, axes=False)
+            domains_lines_and_points = (own_plot + regions.edges_plot + regions.corners_plot)
+            domains_lines_and_points.show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+            if export_format != None:
+                domains_lines_and_points.save("domains_lines_and_points."  + file_name_sufix + "."  + export_format, axes=False,
+                                             xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
         if description:
             for polynomials in regions.regions_description.keys():
                 print("***************************")
