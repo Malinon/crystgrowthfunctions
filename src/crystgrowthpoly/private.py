@@ -1,5 +1,7 @@
 """ Functions for tesselation manipulation"""
 from sage.all import *
+import itertools
+import functools
 
 def translate_vector(tup, vec):
     return tuple(tup[i] + vec[i] for i in range(len(tup)))
@@ -99,19 +101,27 @@ Creates matrix and return its inverse
 @param gen_val Function generating value of polynomial in given points
 
 """
-def generate_inversed_matrix(args):
-    if len(args[0]) == 1:
-        return ~matrix(((arg[0]**2, arg[0], 1) for arg in args))
+def generate_inversed_matrix(args, symmetric_frame):
+    if symmetric_frame:
+        n = len(args) -1
+        return ~matrix(tuple(tuple(arg[0]**(n - i) for i in range(len(args))) for arg in args))
+        #return ~matrix(((arg[0]**2, arg[0], 1) for arg in args))
     else:
-        return ~matrix(((arg[0]*arg[1], arg[0], arg[1], 1) for arg in args))
+        # TODO: In next commit rewrite this code to support higher dimmensions
+        dim = len(args[0])
+        indexes  = range(dim)
+        row_scheme = tuple(itertools.chain(*(tuple(itertools.combinations(indexes, dim - n)) for n in range(dim + 1))))
+        def generate_row(arg):
+            return tuple(functools.reduce(lambda acc, index,:  acc * arg[index], chosen_indexes, 1) for chosen_indexes in row_scheme)
+        return ~matrix(generate_row(arg) for arg in args)
 
 """
 @param gen_val Function generating value of polynomial in given points
 
 """
-def find_poly(gen_val, args):
-    value_vector = column_matrix((gen_val(arg) for arg in args))
-    mat = generate_inversed_matrix(args)
+def find_poly(gen_val, args, symmetric_frame):
+    value_vector = column_matrix( tuple(gen_val(arg) for arg in args))
+    mat = generate_inversed_matrix(args, symmetric_frame)
     return (mat * value_vector).transpose()
 
 """
@@ -125,13 +135,17 @@ Function calculating number of 0 cells
 
 @return Number of 0 cells in tesselation
 """
-def get_0_cells_num(n,m, points, v1, v2):
-    points_in_tesselation = set()
-    for i in range(n):
-        for j in range(m):
-            # Translate figure by v1*i + v2*j, add its points to points' set
-            add_cells(points_in_tesselation, points, multiply_by_scalar_and_add([v1, v2], [i, j]), translate_vector)
-    return len(points_in_tesselation)
+def get_k_cells_num(arguments, cells, translation_vectors):
+    cells_in_tesselation = set()
+    if type(cells[0][0]) != tuple:
+        # Count 0 cells
+        move_operator = translate_vector
+    else:
+        # Count higher dimmension cells
+        move_operator = translate_face
+    for translations_numbers in itertools.product(*(range(arg) for arg in arguments)):
+        add_cells(cells_in_tesselation, cells, multiply_by_scalar_and_add(translation_vectors, translations_numbers), move_operator)
+    return len(cells_in_tesselation)
 
 def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2, frame_v1, frame_v2, additional_limits):
     cells_in_tesselation = set()
@@ -150,7 +164,7 @@ def get_k_cells_num_parallelogram(n,m, cells, v1, v2, k, x0, scale_v1, scale_v2,
 
 def string_to_point(input_string):
     coord_strings = input_string.split()
-    return vector((sage_eval(coord_strings[0]), sage_eval(coord_strings[1])), immutable=True)
+    return tuple(sage_eval(string) for string in coord_strings)
 
 def string_to_cell(input_string, points):
     coord_strings = input_string.split()
@@ -181,5 +195,24 @@ def get_limits_extenders(x0, points):
             if min_v2 in ZZ:
                 min_v2 = min_v2 - 1
     return ((floor(max_v1), -floor(min_v1)), (floor(max_v2), -floor(min_v2)))
-        
-        
+
+def get_alternative_sum(coefficient_lists):
+    length_of_lists = len(coefficient_lists[0])
+    return_list = list()
+    for i in range( length_of_lists):
+        acc = 0
+        for j  in range(len(coefficient_lists)):
+            acc = acc + coefficient_lists[j][i] * ((-1) ** (j % 2))
+        return_list.append(acc)
+    return return_list
+
+def calculate_coefficients_based_ne_euler_charcteristics(coefficient_lists, max_dimmension_coefficients, dim):
+    return_list = get_alternative_sum(coefficient_lists)
+    return_list[-1] = return_list[-1] - 1
+    if dim % 2 == 0:
+        for i in range(len(return_list)):
+            return_list[i] = return_list[i] + max_dimmension_coefficients[i]
+    else:
+        for i in range(len(return_list)):
+            return_list[i] = -(return_list[i] - max_dimmension_coefficients[i])
+    return return_list

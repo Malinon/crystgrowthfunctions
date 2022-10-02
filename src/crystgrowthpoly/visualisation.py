@@ -107,7 +107,7 @@ def calculate_mantisse(x):
 
 
 def find_regions(tessellation, symmetric_frame=True, full_plot=False, repetition_of_unit_cells=None):
-    points = tessellation.polygon.points
+    points = tessellation.polygon.cells[0]
     tes = set()
     # Create fragment of tessellation
     for k in range(-1, 4):
@@ -131,15 +131,14 @@ def find_regions(tessellation, symmetric_frame=True, full_plot=False, repetition
     for rec in found_rectangles:
         rec.set_growth_function(tessellation, symmetric_frame)
         polynomials.add(rec.get_polynomials())
-    print("Number of parallelograms colors", len(polynomials))
     colors = rainbow(len(polynomials))
     d = dict(zip(polynomials, colors))
         #print(rec.get_random_point()).translate
     if repetition_of_unit_cells == None:
-        max_x = max(tessellation.polygon.points, key = lambda p: p[0])[0]
-        min_x = min(tessellation.polygon.points, key = lambda p: p[0])[0]
-        min_y = min(tessellation.polygon.points, key = lambda p: p[1])[1]
-        max_y = max(tessellation.polygon.points, key = lambda p: p[1])[1]
+        max_x = max(tessellation.polygon.cells[0], key = lambda p: p[0])[0]
+        min_x = min(tessellation.polygon.cells[0], key = lambda p: p[0])[0]
+        min_y = min(tessellation.polygon.cells[0], key = lambda p: p[1])[1]
+        max_y = max(tessellation.polygon.cells[0], key = lambda p: p[1])[1]
     else:
         min_x = repetition_of_unit_cells[0][0]
         max_x = repetition_of_unit_cells[0][1]
