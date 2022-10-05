@@ -108,9 +108,11 @@ class Polygon:
             self.cells.append(tuple(cryst_private.sort_points_in_cell(cell) for cell in cells[i]))
 
 class Tesselation:
+    __FILE_PREFIXES = ("domains_parallelogram", "domains_lines_and_points")
     def __init__(self, polygon, cartesian_tesselation_vectors=None):
         self.polygon = polygon
         self.translation_vectors =tuple(tuple(row) for row in matrix.identity(len(self.polygon.cells) - 1))
+        self.dim = len(self.polygon.cells) - 1
         # TODO: Remove after implementing finding crystallographic growth functions for higher dimmensions
         self.v1 = (1,0)
         self.v2 = (0,1)
@@ -133,49 +135,22 @@ class Tesselation:
                             for e in self.polygon.cells[1])
         return G
     def plot_domains(self, symmetric_growth = True, full_plot=False, description = True, export_format=None, file_name_sufix = "",
-                    xmin=None, xmax=None, ymin=None, ymax=None, repetition_of_unit_cells = None, repetition_of_polygon = None, fit_image=False):
-        regions = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot, repetition_of_unit_cells=repetition_of_unit_cells)
-        own_plot = self.plot_edges(repetition_of_polygon)
-        plot_parallelogram = (regions.parallelograms_plot + own_plot)
-        if fit_image:
-            polygon_vertice1 = cryst_private.multiply_by_scalar_and_add(self.cartesian_vectors,
-                                                                   (repetition_of_unit_cells[0][0], repetition_of_unit_cells[1][0]))
-            polygon_vertice2 = cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.cartesian_vectors[1],
-                                                                                                    repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]))
-            margin = max(abs(plot_parallelogram.xmin() - plot_parallelogram.xmax()), abs(plot_parallelogram.ymin() - plot_parallelogram.ymax())) * 0.01
-            censoring_polygon = polygon(((plot_parallelogram.xmin() - margin, plot_parallelogram.ymin() - margin),
-                            (plot_parallelogram.xmax()  +margin, plot_parallelogram.ymin() - margin),
-                            (plot_parallelogram.xmax()  + margin, plot_parallelogram.ymax()  + margin),
-                            (plot_parallelogram.xmin() - margin, plot_parallelogram.ymax() + margin),
-                            polygon_vertice2,
-                            cryst_private.multiply_by_scalar_and_add((polygon_vertice1, self.cartesian_vectors[0], self.cartesian_vectors[1]),
-                                                                    (1, repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0],
-                                                                     repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]) ),
-                            cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.cartesian_vectors[0],
-                                                                                                    repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0])),
-                            polygon_vertice1,
-                            polygon_vertice2, (plot_parallelogram.xmin() - margin, plot_parallelogram.ymax() + margin)), color="white", zorder=5)
-            plot_parallelogram =  censoring_polygon + plot_parallelogram
-        plot_parallelogram.show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax,
-                                ymin = ymin, ymax = ymax)
-        if export_format != None:
-            plot_parallelogram.save("domains_parallelogram" + file_name_sufix + "." + export_format,
-                                   xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, axes=False)
-        if full_plot:
-            domains_lines_and_points = (own_plot + regions.edges_plot + regions.corners_plot)
-            domains_lines_and_points.show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+                     xmin=None, xmax=None, ymin=None, ymax=None, repetition_of_unit_cells = None, repetition_of_polygon = None, fit_image=False,
+                     return_object=False, colors_lists=(None, None)):
+        regions_desc = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot) # repetition_of_unit_cells=repetition_of_unit_cells)
+        if return_object:
+            return regions_desc
+        plots = regions_desc.get_plots(repetition_of_unit_cells=repetition_of_unit_cells, repetition_of_polygon=repetition_of_polygon,
+                                       full_plot=full_plot, colors_lists=colors_lists)
+        for i in range(len(plots)):
+            plots[i].show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax,
+                          ymin = ymin, ymax = ymax)
             if export_format != None:
-                domains_lines_and_points.save("domains_lines_and_points."  + file_name_sufix + "."  + export_format, axes=False,
-                                             xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)
+                plots[i].save(__FILE_PREFIXES[i] + file_name_sufix + "." + export_format,
+                              xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, axes=False)
+
         if description:
-            for polynomials in regions.regions_description.keys():
-                print("***************************")
-                print("For x_0 in")
-                for domain in regions.regions_description[polynomials]:
-                    domain.describe(self.v1, self.v2)
-                for f in regions.regions_description[polynomials][0].growth_f:
-                    f.show()
-                print("***************************")
+            regions_desc.describe()
 
 
 def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2):

@@ -94,20 +94,118 @@ class SpecialPoint:
         return(self.growth_f[0].polynomials, self.growth_f[1].polynomials, self.growth_f[2].polynomials)
 
 class RegionsDescription:
-    def __init__(self, parallelograms_plot, edges_plot, corners_plot, regions_description):
-        self.parallelograms_plot = parallelograms_plot
-        self.edges_plot = edges_plot
-        self.corners_plot = corners_plot
-        self.regions_description = regions_description
+    def __init__(self, regions_lists, dimmension, tessellation):
+        self.regions_lists = regions_lists
+        self.__dimmension = dimmension
+        self.tessellation = tessellation
+        # Group regions by polynomials
+        polynomials_all = set(reg.get_polynomials()
+                              for reg_list in self.regions_lists
+                              for reg in reg_list)
+        self.description_dict = dict( (poly, []) for poly in polynomials_all)
+        for reg_list in self.regions_lists:
+            for reg in reg_list:
+                self.description_dict[reg.get_polynomials()].append(reg)
+        if dimmension == 2:
+            # We use dictionaries to preserve order
+            self.polynomials_par = dict((reg.get_polynomials(), None) for reg in self.regions_lists[0])
+            if len(self.regions_lists) > 1:
+                self.polynomials_lines_points = dict((reg.get_polynomials(), None)
+                                                   for ind in range(1, len(self.regions_lists)) for reg in self.regions_lists[ind])
+    def generate_censoring_polygon(self, plot_basic, repetition_of_unit_cells):
+        polygon_vertice1 = cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors,
+                                                               (repetition_of_unit_cells[0][0], repetition_of_unit_cells[1][0]))
+        polygon_vertice2 = cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.tessellation.cartesian_vectors[1],
+                                                                                                    repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]))
+        margin = max(abs(plot_basic.xmin() - plot_basic.xmax()), abs(plot_basic.ymin() - plot_basic.ymax())) * 0.01
+        censoring_polygon = polygon(((plot_basic.xmin() - margin, plot_basic.ymin() - margin),
+                            (plot_basic.xmax()  +margin, plot_basic.ymin() - margin),
+                            (plot_basic.xmax()  + margin, plot_basic.ymax()  + margin),
+                            (plot_basic.xmin() - margin, plot_basic.ymax() + margin),
+                            polygon_vertice2,
+                            cryst_private.multiply_by_scalar_and_add((polygon_vertice1, self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1]),
+                                                                    (1, repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0],
+                                                                     repetition_of_unit_cells[1][1] - repetition_of_unit_cells[1][0]) ),
+                            cryst_private.translate_vector(polygon_vertice1, cryst_private.multiply_vector(self.tessellation.cartesian_vectors[0],
+                                                                                                    repetition_of_unit_cells[0][1] - repetition_of_unit_cells[0][0])),
+                            polygon_vertice1,
+                            polygon_vertice2, (plot_basic.xmin() - margin, plot_basic.ymax() + margin)), color="white", zorder=5)
+        return censoring_polygon
+
+    """
+    @param repetition_of_unit_cells Pair of pairs defining number of copies of unit cells in each directions
+    @param colors_lists pair containing list of colors (First for 2-d regions, second for 1-d, 0-d regions)
+    @param repetition_of_polygon Pair of pairs defining number of copies of polygon in each directions
+    @param fit_image If true, then polygon drawings outside colored unit cells are not visible
+    """
+    def get_plots(self, repetition_of_unit_cells=None, colors_lists=(None, None),
+                  repetition_of_polygon=None, fit_image=False):
+        if self.__dimmension != 2:
+            # It is only for 2-D
+            pass
+        else:
+            if repetition_of_unit_cells == None:
+                max_x = max(self.tessellation.polygon.cells[0], key = lambda p: p[0])[0]
+                min_x = min(self.tessellation.polygon.cells[0], key = lambda p: p[0])[0]
+                min_y = min(self.tessellation.polygon.cells[0], key = lambda p: p[1])[1]
+                max_y = max(self.tessellation.polygon.cells[0], key = lambda p: p[1])[1]
+            else:
+                min_x = repetition_of_unit_cells[0][0]
+                max_x = repetition_of_unit_cells[0][1]
+                min_y = repetition_of_unit_cells[1][0]
+                max_y = repetition_of_unit_cells[1][1]
+            if colors_lists[0] == None:
+                # If user hasn't selected colors, then do it automaticly
+                colors_poly_dict = dict(zip(self.polynomials_par.keys(), rainbow(len(self.polynomials_par))))
+            else:
+                colors_poly_dict = dict(zip(self.polynomials_par.keys(), colors_lists[0]))
+            G = Graphics()
+            for k in range(floor(min_x), ceil(max_x)):
+                for l in range(floor(min_y), ceil(max_y)):
+                    G = G +  sum(rect.to_graphic_polygon(
+                            self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1], colors_poly_dict[rect.get_polynomials()],
+                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)) ) for rect in self.regions_lists[0])
+            tes_plot = self.tessellation.plot_edges(repetition_of_polygon)
+            G = G + tes_plot
+            if fit_image:
+                censoring_polygon = self.generate_censoring_polygon(G, repetition_of_unit_cells)
+                G = G + censoring_polygon
+            if len(self.regions_lists) > 1:
+                G_lines = Graphics()
+                G_points = Graphics()
+                if colors_lists[0] == None:
+                    # If user hasn't selected colors, then do it automaticly
+                    colors_poly_lines_points_dict = dict(zip(self.polynomials_lines_points.keys(), rainbow(len(self.polynomials_lines_points))))
+                else:
+                    colors_poly_lines_points_dict = dict(zip(self.polynomials_lines_points.keys(), colors_lists[1]))
+                for k in range(floor(min_x), ceil(max_x)):
+                    for l in range(floor(min_y), ceil(max_y)):
+                        G_lines = G_lines + sum(rect.plot(
+                            self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1], colors_poly_lines_points_dict[rect.get_polynomials()],
+                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)) ) for rect in self.regions_lists[1])
+                        G_points = G_points + sum(rect.plot(
+                            self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1], colors_poly_lines_points_dict[rect.get_polynomials()],
+                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)) ) for rect in self.regions_lists[2])
+                return (G, G_lines + G_points + tes_plot)
+            else:
+                return (G,)
+    def describe(self):
+        for polynomials in self.description_dict.keys():
+            print("***************************")
+            print("For x_0 in")
+            for domain in self.description_dict[polynomials]:
+                domain.describe(self.tessellation.v1, self.tessellation.v2)
+            for f in self.description_dict[polynomials][0].growth_f:
+                f.show()
+            print("***************************")
 
 def calculate_mantisse(x):
     return x - floor(x)
 
-# I only need to consider changes in points. Cell changes frames iff one f its points changes frame
 
-
-def find_regions(tessellation, symmetric_frame=True, full_plot=False, repetition_of_unit_cells=None):
+def find_regions(tessellation, symmetric_frame=True, full_plot=False):
     points = tessellation.polygon.cells[0]
+    regions_lists = [] # Based on this list RegionsDescription object is constructed
     tes = set()
     # Create fragment of tessellation
     for k in range(-1, 4):
@@ -116,68 +214,24 @@ def find_regions(tessellation, symmetric_frame=True, full_plot=False, repetition
     x_endpoints = find_boundary_lines(tes, True)
     y_endpoints = find_boundary_lines(tes, False)
 
-    found_rectangles = tuple( OpenRectangle((x_endpoints[x_iter - 1], y_endpoints[y_iter - 1]), (x_endpoints[x_iter], y_endpoints[y_iter]))
-                    for x_iter in range(1, len(x_endpoints) )
-                    for y_iter in range(1, len(y_endpoints) ))
-    #print("We have found rectangles!!!")
-    points_list = tuple(SpecialPoint((x, y)) for x in x_endpoints for y in y_endpoints)
-    #print("We have found special points!!!")
-    vertical_edges_iterator = (OpenLine( (x, y_endpoints[y_iter - 1]), (x, y_endpoints[y_iter]))  for y_iter in range(1, len(y_endpoints)) for x in x_endpoints)
-    horisontal_edges_iterator = (OpenLine( (x_endpoints[x_iter - 1], y), (x_endpoints[x_iter], y))  for x_iter in range(1, len(x_endpoints)) for y in y_endpoints)
-    lines_list = tuple(l for l in itertools.chain(vertical_edges_iterator, horisontal_edges_iterator))
-    different_types = set()
-    #print("We have found lists!!!")
-    polynomials = set()
+    # Find parallelogram regions
+    found_rectangles = tuple(OpenRectangle((x_endpoints[x_iter - 1], y_endpoints[y_iter - 1]), (x_endpoints[x_iter], y_endpoints[y_iter]))
+                             for x_iter in range(1, len(x_endpoints))
+                             for y_iter in range(1, len(y_endpoints)))
     for rec in found_rectangles:
         rec.set_growth_function(tessellation, symmetric_frame)
-        polynomials.add(rec.get_polynomials())
-    colors = rainbow(len(polynomials))
-    d = dict(zip(polynomials, colors))
-        #print(rec.get_random_point()).translate
-    if repetition_of_unit_cells == None:
-        max_x = max(tessellation.polygon.cells[0], key = lambda p: p[0])[0]
-        min_x = min(tessellation.polygon.cells[0], key = lambda p: p[0])[0]
-        min_y = min(tessellation.polygon.cells[0], key = lambda p: p[1])[1]
-        max_y = max(tessellation.polygon.cells[0], key = lambda p: p[1])[1]
-    else:
-        min_x = repetition_of_unit_cells[0][0]
-        max_x = repetition_of_unit_cells[0][1]
-        min_y = repetition_of_unit_cells[1][0]
-        max_y = repetition_of_unit_cells[1][1]
-    G = Graphics()
-    for k in range(floor(min_x), ceil(max_x)):
-        for l in range(floor(min_y), ceil(max_y)):
-            G = G +  sum(rect.to_graphic_polygon(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d[rect.get_polynomials()],
-                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for rect in found_rectangles)
-    #print("Main plot is ready")
+    regions_lists.append(found_rectangles)
+    # If requested find 0,1-dimmensional regions
     if full_plot:
-        G_lines = Graphics()
-        G_points = Graphics()
-        polynomials_lines_points = set()
+        points_list = tuple(SpecialPoint((x, y)) for x in x_endpoints for y in y_endpoints)
+        vertical_edges_iterator = (OpenLine( (x, y_endpoints[y_iter - 1]), (x, y_endpoints[y_iter]))  for y_iter in range(1, len(y_endpoints)) for x in x_endpoints)
+        horisontal_edges_iterator = (OpenLine( (x_endpoints[x_iter - 1], y), (x_endpoints[x_iter], y))  for x_iter in range(1, len(x_endpoints)) for y in y_endpoints)
+        lines_list = tuple(l for l in itertools.chain(vertical_edges_iterator, horisontal_edges_iterator))
         for l in lines_list:
             l.set_growth_function(tessellation, symmetric_frame)
-            polynomials_lines_points.add(l.get_polynomials())
-        #print("We have functions for edges")
         for p in points_list:
             p.set_growth_function(tessellation, symmetric_frame)
-            polynomials_lines_points.add(p.get_polynomials())
-        #print("We have functions for points")
-        d2 = dict(zip(polynomials_lines_points, rainbow(len(polynomials_lines_points))))
-        for k in range(floor(min_x), ceil(max_x)):
-            for l in range(floor(min_y), ceil(max_y)):
-                G_lines = G_lines +  sum(line.plot(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d2[line.get_polynomials()],
-                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for line in lines_list)
-                G_points = G_points +  sum(p.plot(tessellation.cartesian_vectors[0], tessellation.cartesian_vectors[1], d2[p.get_polynomials()],
-                                                                cryst_private.multiply_by_scalar_and_add(tessellation.cartesian_vectors, (k,l)) ) for p in points_list)
-        for poly in polynomials_lines_points:
-            polynomials.add(poly)
-    description_dic = dict( (polys, []) for polys in polynomials )
-    for rect in found_rectangles:
-        description_dic[rect.get_polynomials()].append(rect)
-    if full_plot:
-        for l in lines_list:
-            description_dic[l.get_polynomials()].append(l)
-        for p in points_list:
-            description_dic[p.get_polynomials()].append(p)
-        return RegionsDescription(G, G_lines, G_points,  description_dic)
-    return RegionsDescription(G, None, None,  description_dic)
+        regions_lists.append(lines_list)
+        regions_lists.append(points_list)
+
+    return RegionsDescription(regions_lists, tessellation.dim, tessellation)
