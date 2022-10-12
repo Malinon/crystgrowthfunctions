@@ -7,24 +7,31 @@ This class represents growth function
 class growth_function:
     __PREDICATE_FORM_1_VARIABLE = "If n mod {} = {}, then"
     __PREDICATE_FORM_2_VARIABLES = "If k mod {} = {} and l mod {} = {}, then"
-    def convert_coefficients_to_polynomial(self, coefficients,  number_of_variables):
+    def convert_coefficients_to_polynomial(self, coefficients,  number_of_variables, normalized=True):
         if number_of_variables != 1:
             indexes  = range(number_of_variables)
             row_scheme = tuple(itertools.chain(*(tuple(chosen_indexes for
                                                        chosen_indexes in itertools.combinations(indexes, number_of_variables - n))
                                                  for n in range(number_of_variables + 1))))
-            return sum( coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index], row_scheme[i], 1)
-                       for i in range(len(coefficients)))
+            if normalized:
+                return sum( coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index], row_scheme[i], 1)
+                           for i in range(len(coefficients)))
+            else:
+                return sum( (2**len(row_scheme)) * coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index], row_scheme[i], 1)
+                           for i in range(len(coefficients)))
         else:
-            return sum(coefficients[-(1 + i)] * (n**i)  for i in range(len(coefficients)))
+            if normalized:
+                return sum(coefficients[-(1 + i)] * (n**i)  for i in range(len(coefficients)))
+            else:
+                return sum(coefficients[-(1 + i)] * (n**i) * (2**i)  for i in range(len(coefficients)))
 
-    def __init__(self, polynomials_coefficients, number_of_variables, cell_dimension, limits=None):
+    def __init__(self, polynomials_coefficients, number_of_variables, cell_dimension, limits=None, normalized=True):
         if number_of_variables == 1:
             self.__variables = (var("n"))
         else:
             self.__variables = tuple(var('n_{}'.format(i)) for i in range (1, number_of_variables + 1))
         self.polynomials = tuple(
-            self.convert_coefficients_to_polynomial(coef, number_of_variables)
+            self.convert_coefficients_to_polynomial(coef, number_of_variables, normalized)
             for coef in polynomials_coefficients)
         self.number_of_variables = number_of_variables
         self.cell_dimension = cell_dimension

@@ -10,7 +10,7 @@ Function finding growth polynomials
 @param cells Sorted (by cells dimmension) list of cells list
 @param translation_vectors  Vectors generating tessellation
 """
-def get_topological_growth_polynomials(cells, translation_vectors, symmetric_frame=True):
+def get_topological_growth_polynomials(cells, translation_vectors, symmetric_frame=True, normalized=True):
     dim = len(cells) - 1
     if symmetric_frame:
         args = tuple(tuple(i for j in range(dim)) for i in range(1, dim + 2))
@@ -25,6 +25,8 @@ def get_topological_growth_polynomials(cells, translation_vectors, symmetric_fra
             raise NotImplementedError("It is not implemented yet.")
         variables_num = dim
     polynomial_k_cells_coeff_lists = list()
+    if not normalized:
+        args = tuple(tuple(2 * val for val in arg) for arg in args)
     for i in range(len(cells) - 2):
         gen_val = lambda arg: cryst_private.get_k_cells_num(arg, cells[i], translation_vectors)
         polynomial_k_cells_coeff_lists.append(cryst_private.find_poly(gen_val, args, symmetric_frame)[0])
@@ -36,7 +38,7 @@ def get_topological_growth_polynomials(cells, translation_vectors, symmetric_fra
         cryst_private.calculate_coefficients_based_ne_euler_charcteristics(
             polynomial_k_cells_coeff_lists, highest_dim_function, dim))
     polynomial_k_cells_coeff_lists.append(highest_dim_function )
-    return tuple(gf.growth_function((polynomial_k_cells_coeff_lists[i],), variables_num, i) for i in range(dim + 1))
+    return tuple(gf.growth_function((polynomial_k_cells_coeff_lists[i],), variables_num, i, normalized=normalized) for i in range(dim + 1))
 
 
 """
@@ -121,8 +123,8 @@ class Tesselation:
         return get_crystalographic_growth_functions(self.polygon.cells[0], self.polygon.cells[1], self.polygon.cells[2], self.v1, self.v2, x0,
                                                     frame_scale_v1 = scale_v1, frame_scale_v2 = scale_v2,
                                                    in_one_variable=symmetric_frame)
-    def get_growth_polynomials(self, symmetric_frame=True):
-        return get_topological_growth_polynomials(self.polygon.cells, self.translation_vectors, symmetric_frame)
+    def get_growth_polynomials(self, symmetric_frame=True, normalized = True):
+        return get_topological_growth_polynomials(self.polygon.cells, self.translation_vectors, symmetric_frame, normalized)
     def plot_edges(self, repetition_of_polygon):
         if repetition_of_polygon == None:
             repetition_of_polygon = ((0,0), (0,0))
