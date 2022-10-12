@@ -17,7 +17,7 @@ class growth_function:
                 return sum( coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index], row_scheme[i], 1)
                            for i in range(len(coefficients)))
             else:
-                return sum( (2**len(row_scheme)) * coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index], row_scheme[i], 1)
+                return sum(coefficients[i] * functools.reduce(lambda acc, index,:  acc * self.__variables[index] * 2, row_scheme[i], 1)
                            for i in range(len(coefficients)))
         else:
             if normalized:
