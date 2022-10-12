@@ -112,6 +112,11 @@ class RegionsDescription:
             if len(self.regions_lists) > 1:
                 self.polynomials_lines_points = dict((reg.get_polynomials(), None)
                                                    for ind in range(1, len(self.regions_lists)) for reg in self.regions_lists[ind])
+    def get_colors_num(self):
+        if len(self.regions_lists) > 1:
+            return (len(self.polynomials_par), len(self.polynomials_par))
+        else:
+            return len(self.polynomials_lines_points)
     def generate_censoring_polygon(self, plot_basic, repetition_of_unit_cells):
         polygon_vertice1 = cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors,
                                                                (repetition_of_unit_cells[0][0], repetition_of_unit_cells[1][0]))

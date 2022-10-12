@@ -141,7 +141,7 @@ class Tesselation:
         if return_object:
             return regions_desc
         plots = regions_desc.get_plots(repetition_of_unit_cells=repetition_of_unit_cells, repetition_of_polygon=repetition_of_polygon,
-                                       full_plot=full_plot, colors_lists=colors_lists)
+                                       colors_lists=colors_lists)
         for i in range(len(plots)):
             plots[i].show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax,
                           ymin = ymin, ymax = ymax)
@@ -153,21 +153,26 @@ class Tesselation:
             regions_desc.describe()
 
 
-def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2):
+def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2, crystallographic_coordinates=True):
     input_file = open(file_path, 'r')
     lines = input_file.readlines()
     input_file.close()
     cells_nums = tuple(int(s) for s in re.findall(r"\d+", lines[0]))
     cells = list()
-    points = tuple(cryst_private.string_to_point(lines[i])
-              for i in range(1, cells_nums[0] + 1))
+    cartesian_vectors = None
+    if cartesian_vectors_included:
+        cartesian_vectors = tuple(cryst_private.string_to_point(lines[i-dim]) for i in range(dim))
+    if crystallographic_coordinates:
+        points = tuple(cryst_private.string_to_point(lines[i])
+                  for i in range(1, cells_nums[0] + 1))
+    else:
+        converter = lambda p: tuple(vector(p) * ~matrix(cartesian_vectors))
+        points = tuple(converter(cryst_private.string_to_point(lines[i]))
+                  for i in range(1, cells_nums[0] + 1))
     cells.append(points)
     acc_cells_number = cells_nums[0] + 1
     for i in range(1, dim + 1):
         cells.append(tuple(cryst_private.string_to_cell(lines[j], points)
                   for j in range(acc_cells_number, acc_cells_number + cells_nums[i])))
         acc_cells_number = acc_cells_number + cells_nums[i]
-    cartesian_vectors = None
-    if cartesian_vectors_included:
-        cartesian_vectors = tuple(cryst_private.string_to_point(lines[acc_cells_number + i]) for i in range(dim))
     return Tesselation(Polygon(cells),cartesian_vectors)
