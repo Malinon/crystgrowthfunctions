@@ -156,6 +156,36 @@ class Tesselation:
 
 
 def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2, crystallographic_coordinates=True):
+    '''Reads tessellation from file
+
+Input File Format:
+    The first line shows the number of cells in each dimension sorted in ascending order with respect to the cell dimension.
+    The following lines encode the coordinates of the tessellation vertices.
+    Coordinates can be given in crystallographic or Cartesian coordinates.
+    When describing vertices, the SageMath syntax can be used.
+    Higher dimensional cells are described after the vertices.
+    Each line encodes one cell.
+    Higher dimensional cells are encoded with vertex indices.
+    The last two lines contain information about translation vectors
+
+Example input file:
+    6 6 1
+        0     0
+        1/3  -1/3
+        1     0
+        4/3   2/3
+        1     1
+        1/3   2/3
+    1 2
+    2 3
+    3 4
+    4 5
+    5 6
+    6 1
+    1 2 3 4 5 6
+    sqrt(3)*2 0
+    -sqrt(3) 3
+    '''
     input_file = open(file_path, 'r')
     lines = input_file.readlines()
     input_file.close()

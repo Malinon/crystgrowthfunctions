@@ -58,6 +58,10 @@ class OpenLine:
         self.start = start
         self.end = end
         self.cartesian_endpoints = None
+    def __hash__(self):
+        return hash((self.start, self.end))
+    def __eq__(self, obj):
+        return self.start == obj.start and self.end == obj.end
     def plot(self, v1, v2, color, translation=(0,0)):
         if self.cartesian_endpoints == None:
             mat = matrix((v1, v2))
