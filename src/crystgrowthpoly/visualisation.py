@@ -62,13 +62,13 @@ class OpenLine:
         return hash((self.start, self.end))
     def __eq__(self, obj):
         return self.start == obj.start and self.end == obj.end
-    def plot(self, v1, v2, color, translation=(0,0)):
+    def plot(self, v1, v2, color, translation=(0,0), thickness=5):
         if self.cartesian_endpoints == None:
             mat = matrix((v1, v2))
             real_start = vector(self.start)  * mat
             real_end = vector(self.end)  * mat
             self.cartesian_endpoints = (real_start, real_end)
-        return line((self.cartesian_endpoints[0] + vector(translation), self.cartesian_endpoints[1] + vector(translation)), color=color)
+        return line((self.cartesian_endpoints[0] + vector(translation), self.cartesian_endpoints[1] + vector(translation)), color=color, thickness=thickness)
     def get_point_from_interior(self):
         return ((self.start[0] + self.end[0]) / Integer(2), (self.start[1] + self.end[1]) / Integer(2))
     def get_polynomials():
@@ -84,10 +84,10 @@ class SpecialPoint:
     def __init__(self, point):
         self.point = point
         self.cartesian_point = None
-    def plot(self, v1, v2, color, translation):
+    def plot(self, v1, v2, color, translation, size):
         if self.cartesian_point == None:
             self.cartesian_point = vector(self.point) * matrix((v1, v2))
-        return point(self.cartesian_point + vector(translation), color =color, size = 20, zorder=2)
+        return point(self.cartesian_point + vector(translation), color =color, size = size, zorder=2)
     def get_point(self):
         return self.point
     def set_growth_function(self, tes, symmetric_frame):
@@ -148,7 +148,7 @@ class RegionsDescription:
     @param fit_image If true, then polygon drawings outside colored unit cells are not visible
     """
     def get_plots(self, repetition_of_unit_cells=None, colors_lists=(None, None),
-                  repetition_of_polygon=None, fit_image=False):
+                  repetition_of_polygon=None, fit_image=False, lines_thickness = 5, point_size = 20):
         if self.__dimmension != 2:
             # It is only for 2-D
             pass
@@ -191,10 +191,10 @@ class RegionsDescription:
                     for l in range(floor(min_y), ceil(max_y)):
                         G_lines = G_lines + sum(rect.plot(
                             self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1], colors_poly_lines_points_dict[rect.get_polynomials()],
-                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)) ) for rect in self.regions_lists[1])
+                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)), thickness = lines_thickness) for rect in self.regions_lists[1])
                         G_points = G_points + sum(rect.plot(
                             self.tessellation.cartesian_vectors[0], self.tessellation.cartesian_vectors[1], colors_poly_lines_points_dict[rect.get_polynomials()],
-                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)) ) for rect in self.regions_lists[2])
+                            cryst_private.multiply_by_scalar_and_add(self.tessellation.cartesian_vectors, (k,l)), size = point_size) for rect in self.regions_lists[2])
                 return (G, G_lines + G_points + tes_plot)
             else:
                 return (G,)
