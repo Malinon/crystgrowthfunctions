@@ -17,8 +17,8 @@ class TestTopologicalGrowth(unittest.TestCase):
         functions_triple = (n**2 + 2 * n + 1,  2*n**2 + 2*n,  n**2)
         general_testing_function(self, True, "./input/4444.txt", functions_triple)
         # Asymetric case
-        var("k l")
-        functions_triple = (k*l + k + l + 1, 2*k*l + k + l, k*l)
+        var("n_1 n_2")
+        functions_triple = (n_1*n_2 + n_1 + n_2 + 1, 2*n_1*n_2 + n_1 + n_2, n_1*n_2)
         general_testing_function(self, False, "./input/4444.txt", functions_triple)
 
     def test_333333(self):
@@ -26,8 +26,8 @@ class TestTopologicalGrowth(unittest.TestCase):
         functions_triple = (2 * n**2 + 4 * n,  3*n**2 + 4*n -1,  n**2)
         general_testing_function(self, True, "./input/333333.txt", functions_triple)
         # Asymetric case
-        var("k l")
-        functions_triple = (2*k*l + 2*k + 2*l, 3*k*l  + 2*k  + 2*l - 1, k*l)
+        var("n_1 n_2")
+        functions_triple = (2*n_1*n_2 + 2*n_1 + 2*n_2, 3*n_1*n_2  + 2*n_1  + 2*n_2 - 1, n_1*n_2)
         general_testing_function(self, False, "./input/333333.txt", functions_triple)
 
     def test_p2(self):
@@ -35,8 +35,8 @@ class TestTopologicalGrowth(unittest.TestCase):
         functions_triple = (2*n**2 + 3*n + 1, 4*n**2 + 3*n, 2*n**2)
         general_testing_function(self, True, "./input/p2.txt", functions_triple)
         # Asymetric case
-        var("k l")
-        functions_triple = (2*k*l + 2*k + l + 1, 4*k*l + 2*k + l, 2*k*l)
+        var("n_1 n_2")
+        functions_triple = (2*n_1*n_2 + 2*n_1 + n_2 + 1, 4*n_1*n_2 + 2*n_1 + n_2, 2*n_1*n_2)
         general_testing_function(self, False, "./input/p2.txt", functions_triple)
 
     def test_pg(self):
@@ -44,8 +44,8 @@ class TestTopologicalGrowth(unittest.TestCase):
         functions_triple = (4*n**2 + 6*n, 6*n**2 + 6*n - 1, 2 * n**2)
         general_testing_function(self, True, "./input/pg.txt", functions_triple)
         # Asymetric case
-        var("k l")
-        functions_triple = (4*k*l + 4*k + 2*l, 6*k*l + 4*k + 2*l - 1, 2 * k * l)
+        var("n_1 n_2")
+        functions_triple = (4*n_1*n_2 + 4*n_1 + 2*n_2, 6*n_1*n_2 + 4*n_1 + 2*n_2 - 1, 2 * n_1 * n_2)
         general_testing_function(self, False, "./input/pg.txt", functions_triple)
 
 
