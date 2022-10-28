@@ -7,7 +7,7 @@ This class represents growth function
 class growth_function:
     __PREDICATE_FORM_1_VARIABLE = "If n mod {} = {}, then"
     __PREDICATE_FORM_2_VARIABLES = "If k mod {} = {} and l mod {} = {}, then"
-    def convert_coefficients_to_polynomial(self, coefficients,  number_of_variables, normalized=True):
+    def convert_coefficients_to_polynomial(self, coefficients, number_of_variables, normalized=True):
         if number_of_variables != 1:
             indexes  = range(number_of_variables)
             row_scheme = tuple(itertools.chain(*(tuple(chosen_indexes for
@@ -46,7 +46,6 @@ class growth_function:
                 self.N = limits
                 self.polynomial_selector = lambda n: mod(n, limits[0])
             else:
-                # TODO: In next commit rewrite this code to support higher dimmensions
                 self.K = limits[0]
                 self.L = limits[1]
                 self.polynomial_selector = lambda arg: mod(arg[0], self.K) + N * mod(arg[1], self.L)
@@ -63,7 +62,6 @@ class growth_function:
                     print(growth_function.__PREDICATE_FORM_1_VARIABLE.format(self.N, n_iter))
                     pretty_print(fun,"(",n,")", "=", self.polynomials[n_iter])
         else:
-            # TODO: In next commit rewrite this code to support higher dimmensions
             var('k l')
             variables = tuple(var('n_{}'.format(i)) for i in range (1, self.number_of_variables + 1))
             if self.is_polynomial:
