@@ -1,3 +1,4 @@
+""" Functions for creating and describing orphic diagrams"""
 import crystgrowthpoly.private as cryst_private
 from sage.all import *
 import itertools
@@ -5,18 +6,13 @@ import itertools
 def calculate_mantisse(x):
     return x - floor(x)
 
-
-"""
-Finds the maximum translation along vector v for which the set of vertices contained within a frame remain unchanged.
-
-@param Vertices from fragment of tessellation
-@param coordinates Starting coordinate
-@param is_vertical If True, then v = v1. If False, then v = v2
-
-@return Number describingW maximum translation along vector v for which the set of vertices contained within a frame remain unchanged.
-
-"""
+## @param Vertices from fragment of tessellation
+## @param coordinates Starting coordinate
+## @param is_vertical If True, then v = v1. If False, then v = v2
+##
+## @return Number describingW maximum translation along vector v for which the set of vertices contained within a frame remain unchanged.
 def find_mantisse(tes, coordinate, is_vertical):
+"""Finds the maximum translation along vector v for which the set of vertices contained within a frame remain unchanged."""
     if is_vertical:
         index = 0
     else:
@@ -30,16 +26,12 @@ def find_mantisse(tes, coordinate, is_vertical):
     return coordinate + min_mantisse#min(coordinate + min_mantisse, 1)
 
 
-"""
-Finds lines perpendicular to chosen axis defining domains. Obtained set may not be minimal
-
-@param Vertices from fragment of tessellation
-@param is_vertical If True, then v = v1. If False, then v = v2
-
-@return List of numbers describing mentioned lines
-
-"""
+## @param Vertices from fragment of tessellation
+## @param is_vertical If True, then v = v1. If False, then v = v2
+##
+## @return List of numbers describing mentioned lines
 def find_boundary_lines(tes, is_vertical):
+"""Finds lines perpendicular to chosen axis defining domains. Obtained set may not be minimal"""
     # We start at line "v_i coordinate = 0"
     coordinate = 0
     endpoints = [coordinate]
@@ -49,10 +41,8 @@ def find_boundary_lines(tes, is_vertical):
         endpoints.append(coordinate)
     return endpoints
 
-"""
-This class represent 2-dimmensional domains
-"""
 class OpenRectangle:
+"""This class represents 2-dimmensional domains"""
     def __init__(self, lower_left_corner, higher_right_corner):
         self.higher_right_corner = higher_right_corner
         self.lower_left_corner = lower_left_corner
@@ -82,10 +72,8 @@ class OpenRectangle:
     def get_polynomials(self):
         return(self.growth_f[0].polynomials, self.growth_f[1].polynomials, self.growth_f[2].polynomials)
 
-"""
-This class represent 1-dimmensional domains
-"""
 class OpenLine:
+"""This class represent 1-dimmensional domains"""
     def __init__(self, start, end, exclude_from_graph = False):
         self.start = start
         self.end = end
@@ -116,10 +104,8 @@ class OpenLine:
     def get_polynomials(self):
         return (self.growth_f[0].polynomials, self.growth_f[1].polynomials, self.growth_f[2].polynomials)
 
-"""
-This class represent 0-dimmensional domains
-"""
 class SpecialPoint:
+"""This class represent 0-dimmensional domains"""
     def __init__(self, point, exclude_from_graph = False):
         self.point = point
         self.cartesian_point = None
@@ -139,10 +125,8 @@ class SpecialPoint:
     def get_polynomials(self):
         return(self.growth_f[0].polynomials, self.growth_f[1].polynomials, self.growth_f[2].polynomials)
 
-"""
-This class represent 0-dimmensional domains.
-"""
 class RegionsDescription:
+"""This class describes all regions of ophic diagram."""
     def __init__(self, regions_lists, dimmension, tessellation):
         self.regions_lists = regions_lists
         self.__dimmension = dimmension
@@ -161,10 +145,8 @@ class RegionsDescription:
             if len(self.regions_lists) > 1:
                 self.polynomials_lines_points = dict((reg.get_polynomials(), None)
                                                    for ind in range(1, len(self.regions_lists)) for reg in self.regions_lists[ind])
-    """
-    Returns numbers of colors (representing triples of growth functions on plots)
-    """
     def get_colors_num(self):
+        """Returns numbers of colors (representing triples of growth functions on plots)"""
         if len(self.regions_lists) > 1:
             return (len(self.polynomials_par), len(self.polynomials_lines_points))
         else:
@@ -190,14 +172,11 @@ class RegionsDescription:
                             polygon_vertice2, (plot_basic.xmin() - margin, plot_basic.ymax() + margin)), color="white", zorder=5)
         return censoring_polygon
 
-    """
-    @param repetition_of_unit_cells Pair of pairs defining number of copies of unit cells in each directions
-    @param colors_lists pair containing list of colors (First for 2-d regions, second for 1-d, 0-d regions)
-    @param repetition_of_polygon Pair of pairs defining number of copies of polygon in each directions
-    @param fit_image If true, then polygon drawings outside colored unit cells are not visible
-
-    @return Tuple containing demanded plots
-    """
+    ## @param repetition_of_unit_cells Pair of pairs defining number of copies of unit cells in each directions
+    ## @param colors_lists pair containing list of colors (First for 2-d regions, second for 1-d, 0-d regions)
+    ## @param repetition_of_polygon Pair of pairs defining number of copies of polygon in each directions
+    ## @param fit_image If true, then polygon drawings outside colored unit cells are not visible
+    ## @return Tuple containing demanded plots
     def get_plots(self, repetition_of_unit_cells=None, colors_lists=(None, None),
                   repetition_of_polygon=None, fit_image=False, lines_thickness = 5, point_size = 20, polygon_thickness = 1):
         if self.__dimmension != 2:
@@ -250,22 +229,20 @@ class RegionsDescription:
             else:
                 return (G,)
     def describe(self):
+        print("Orphic diagrams description")
+        print("x_0 - starting point of frames")
         for polynomials in self.description_dict.keys():
             print("***************************")
             print("For x_0 in")
             for domain in self.description_dict[polynomials]:
-                domain.describe(self.tessellation.v1, self.tessellation.v2)
+                domain.describe(self.tessellation.translation_vectors[0], self.tessellation.translation_vectors[1])
             for f in self.description_dict[polynomials][0].growth_f:
                 f.show()
             print("***************************")
 
-"""
-
-@param tessellation
-@symme 
-@param full_plot
-
-"""
+## @param tessellation Instansce of Tessellation class
+## @symmetric_growth If True, growth of the frame is the same in each directions
+## @param full_plot
 def find_regions(tessellation, symmetric_growth=True, full_plot=False):
     points = tessellation.polygon.cells[0]
     regions_lists = [] # Based on this list RegionsDescription object is constructed

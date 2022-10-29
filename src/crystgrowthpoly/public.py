@@ -1,19 +1,19 @@
+""" Functions"""
 import crystgrowthpoly.private as cryst_private
 import crystgrowthpoly.visualisation as cryst_visualisation
 import crystgrowthpoly.growth_function as gf
 import re
 from sage.all import *
 
+## @param cells Sorted (by cells dimmension) list of cells list
+## @param translation_vectors  Vectors generating tessellation
+## @param symmetric_growth True, if growth is the same in each direction. False otherwise.
+## @param normalized Normalization can be described as dividing argument by 2
+## @return Triple of growth functions @ref growth_function . Functions are sorted ascending by dimmensions of corresponding cells.
+def get_topological_growth_polynomials(cells, translation_vectors, symmetric_growth=True, normalized=True):
 """
 Function finding topological growth functions
-
-@param cells Sorted (by cells dimmension) list of cells list
-@param translation_vectors  Vectors generating tessellation
-@param symmetric_growth True, if growth is the same in each direction. False otherwise.
-@param normalized Normalization can be described as dividing argument by 2
-@return Triple of growth functions @ref growth_function . Functions are sorted ascending by dimmensions of corresponding cells.
 """
-def get_topological_growth_polynomials(cells, translation_vectors, symmetric_growth=True, normalized=True):
     dim = len(cells) - 1
     if symmetric_growth:
         args = tuple(tuple(i for j in range(dim)) for i in range(1, dim + 2))
@@ -45,20 +45,19 @@ def get_topological_growth_polynomials(cells, translation_vectors, symmetric_gro
     return tuple(gf.growth_function((polynomial_k_cells_coeff_lists[i],), variables_num, i, normalized=normalized) for i in range(dim + 1))
 
 
+## @param points 0-cells of repeating figure
+## @param edges 1-cells of repeating figure
+## @param faces 2-cells of r
+## @param v1  Tessellation vector
+## @param v2  Tessellation vector
+## @param x0  
+## @param frame_scale_v1  frame_scale_v1 * v1 is used to define parallelogram frame
+## @param frame_scale_v2  frame_scale_v2 * v2 is used to define parallelogram frame
+## @param symmetric_growth True, if growth is the same in each direction. False otherwise.
+def get_crystallographic_growth_functions(points, edges, faces, v1, v2, x0, frame_scale_v1 = 1, frame_scale_v2 = 1, symmetric_growth=True):
 """
 Function finding crystallographic_growth_functions
-
-@param points 0-cells of repeating figure
-@param edges 1-cells of repeating figure
-@param faces 2-cells of r
-@param v1  Tessellation vector
-@param v2  Tessellation vector
-@param x0  
-@param frame_scale_v1  frame_scale_v1 * v1 is used to define parallelogram frame
-@param frame_scale_v2  frame_scale_v2 * v2 is used to define parallelogram frame
-@param symmetric_growth True, if growth is the same in each direction. False otherwise.
 """
-def get_crystallographic_growth_functions(points, edges, faces, v1, v2, x0, frame_scale_v1 = 1, frame_scale_v2 = 1, symmetric_growth=True):
     try:
         rational_scale_v1 = Rational(frame_scale_v1)
         rational_scale_v2 = Rational(frame_scale_v2)
@@ -110,10 +109,11 @@ def get_crystallographic_growth_functions(points, edges, faces, v1, v2, x0, fram
                 polynomials_2_cells.append(cryst_private.find_poly(gen_num_of_2_cells, args, symmetric_growth)[0])
         # Convert lists of polynomials to growth function
         return (gf.growth_function(polynomials_0_cells, 2, 0, (K, L)), gf.growth_function(polynomials_1_cells, 2, 1, (K, L)), gf.growth_function(polynomials_2_cells, 2, 2, (K, L)))
+
+class Polygon:
 """
 Class representing repeating motif
 """
-class Polygon:
     def __init__(self, cells):
         self.cells = list()
         self.cells.append(cells[0])
@@ -121,10 +121,10 @@ class Polygon:
         for i in range(1, len(cells)):
             self.cells.append(tuple(cryst_private.sort_points_in_cell(cell) for cell in cells[i]))
 
+class Tessellation:
 """
 Class representing tessellation
 """
-class Tessellation:
     __FILE_PREFIXES = ("domains_parallelogram", "domains_lines_and_points")
     def __init__(self, polygon, cartesian_tessellation_vectors=None):
         self.polygon = polygon
@@ -132,27 +132,22 @@ class Tessellation:
         self.dim = len(self.polygon.cells) - 1
         self.cartesian_vectors = cartesian_tessellation_vectors
 
-    """
-    Calculates crystallographical growth functions.
-    
-    @param symmetric_growth
-    @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
-    @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
-    """
+ 
+##    @param symmetric_growth
+##    @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
+##    @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
     def get_growth_polynomials_parallelogram(self, scale_v1 = 1, scale_v2 = 1, x0 = (0,0), symmetric_growth=True):
+    """Calculates crystallographical growth functions."""
         if self.dim != 2:
             raise NotImplementedError("It is not implemented yet.")
         return get_crystallographic_growth_functions(self.polygon.cells[0], self.polygon.cells[1], self.polygon.cells[2], self.translation_vectors[0],
                                                     self.translation_vectors[1], x0, frame_scale_v1 = scale_v1, frame_scale_v2 = scale_v2,
                                                    symmetric_growth=symmetric_growth)
-    """
-    Calculates topological growth functions.
-
     @param symmetric_growth
     @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
     @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
-    """
     def get_growth_polynomials(self, symmetric_growth=True, normalized = True):
+    """ Calculates topological growth functions. """
         return get_topological_growth_polynomials(self.polygon.cells, self.translation_vectors, symmetric_growth, normalized)
     """
     This method plots edges of the tessellation
@@ -171,33 +166,30 @@ class Tessellation:
                             for e in self.polygon.cells[1])
         return G
 
-    """
-    @brief Method for plotting orphic diagrams and describing them
-
-    This method
-    1) plots orphic diagrams and describe them in textual form or
-    2) returns instance of class @ref RegionsDescription
-
-    The mode of operation of the function depends on the argument return_object
-
-    @param symmetric_growth True, if growth is the same in each direction, False otherwise.
-    @param full_plot=False If False, only plot of 2-d domains is created
-    @param description If True, textual description of domains is printed.
-    @param export_format Format of exported image. Supported values: ".eps", ".pdf", ".pgf", ".png", ".ps", ".svg,"
-    @param file_name_sufix Sufix added to name of file containing orphic diagram
-    @param xmin Minimal x coordinate of final image. The argument doesn't have an effect if return_object = True.
-    @param xmax Maximal x coordinate of final image. The argument doesn't have an effect if return_object = True.
-    @param ymin Minimal y coordinate of final image. The argument doesn't have an effect if return_object = True.
-    @param ymax Maximal y coordinate of final image. The argument doesn't have an effect if return_object = True.
-    @param repetition_of_unit_cells Tuple of tuples describing how many times orphic diagram should be repeated in each direction. The argument doesn't have an effect if return_object = True.
-    @param repetition_of_polygon Tuple of tuples describing how many times orphic diagram should be repeated in each direction. The argument doesn't have an effect if return_object = True.
-    @param fit_image If true edges of tessellation outside orphic diagrams are not visible. The argument doesn't have an effect if return_object = True.
-    @param return_object If True instance of class @ref RegionsDescription is returned
-    @param colors_lists Tuple consisting of two lists describing colors of plots. If list is None, then colors of corresponding plot are chosen automatically. The argument doesn't have an effect if return_object = True.
-    """
+##    @brief Method for plotting orphic diagrams and describing them
+##
+##   @param symmetric_growth True, if growth is the same in each direction, False otherwise.
+##   @param full_plot=False If False, only plot of 2-d domains is created
+##   @param description If True, textual description of domains is printed.
+##   @param export_format Format of exported image. Supported values: ".eps", ".pdf", ".pgf", ".png", ".ps", ".svg,"
+##   @param file_name_sufix Sufix added to name of file containing orphic diagram
+##   @param xmin Minimal x coordinate of final image. The argument doesn't have an effect if return_object = True.
+##   @param xmax Maximal x coordinate of final image. The argument doesn't have an effect if return_object = True.
+##   @param ymin Minimal y coordinate of final image. The argument doesn't have an effect if return_object = True.
+##   @param ymax Maximal y coordinate of final image. The argument doesn't have an effect if return_object = True.
+##   @param repetition_of_unit_cells Tuple of tuples describing how many times orphic diagram should be repeated in each direction. The argument doesn't have an effect if return_object = True.
+##   @param repetition_of_polygon Tuple of tuples describing how many times orphic diagram should be repeated in each direction. The argument doesn't have an effect if return_object = True.
+##   @param fit_image If true edges of tessellation outside orphic diagrams are not visible. The argument doesn't have an effect if return_object = True.
+##   @param return_object If True instance of class @ref RegionsDescription is returned
+##   @param colors_lists Tuple consisting of two lists describing colors of plots. If list is None, then colors of corresponding plot are chosen automatically. The argument doesn't have an effect if return_object = True.
     def plot_domains(self, symmetric_growth = True, full_plot=False, description = True, export_format=None, file_name_sufix = "",
                      xmin=None, xmax=None, ymin=None, ymax=None, repetition_of_unit_cells = None, repetition_of_polygon = None, fit_image=False,
                      return_object=False, colors_lists=(None, None)):
+    """This method
+1) plots orphic diagrams and describe them in textual form or
+2) returns instance of class @ref RegionsDescription
+
+    The mode of operation of the function depends on the argument return_object"""
         regions_desc = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot)
         if return_object:
             return regions_desc
@@ -207,21 +199,19 @@ class Tessellation:
             plots[i].show(aspect_ratio=1, axes=False, xmin = xmin, xmax = xmax,
                           ymin = ymin, ymax = ymax)
             if export_format != None:
-                plots[i].save(__FILE_PREFIXES[i] + file_name_sufix + "." + export_format,
+                plots[i].save(Tessellation.__FILE_PREFIXES[i] + file_name_sufix + "." + export_format,
                               xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, axes=False)
 
         if description:
             regions_desc.describe()
 
-"""
 
-@param file_path Path to file describing tessellation
-@param cartesian_vectors_included It should be False if input file doesn't contain information about translation vectors 
-@param dim Tessellation dimmension
-@param crystallographic_coordinates It should be True if vertices are given in crystallographic coordinates
-
-@return Instance of based on input file
-"""
+##@param file_path Path to file describing tessellation
+##@param cartesian_vectors_included It should be False if input file doesn't contain information about translation vectors 
+##@param dim Dimmension of tessellation
+##@param crystallographic_coordinates It should be True if vertices are given in crystallographic coordinates
+##
+##@return Instance of Tessellation class based on input file
 def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2, crystallographic_coordinates=True):
     '''Reads tessellation from file
 
