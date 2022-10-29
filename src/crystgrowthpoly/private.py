@@ -1,4 +1,4 @@
-""" Functions for tessellation manipulation"""
+"""Functions not for end user"""
 from sage.all import *
 import itertools
 import functools
@@ -13,17 +13,16 @@ def translate_face(face, vec):
     """Translate cell, which dimmension is higher then 1"""
     return tuple(translate_vector(face[i], vec) for i in range(len(face)))
 
-## @param cells_in_tessellation Cells, which already are in tessellaion
+## @param cells_in_tessellation Cells, which already are in tessellation
 ## @param cells All repeating figure's cells of some dimmension
 ## @param vec Translation vector
 ## @param move_operator Function translating given cell by vec
 def add_cells(cells_in_tessellation, cells, vec, move_operator):
-    """Add translate and add cells to tessellation model"""
+    """Translate and add cells to tessellation model"""
     for c in cells:
         cells_in_tessellation.add(move_operator(c, vec))
 
-
-
+ 
 ## @param cells_in_tessellation Cells, which already are in tessellation
 ## @param cells All repeating figure's cells of some dimmension
 ## @param vec Translation vector
@@ -50,7 +49,6 @@ def multiply_by_scalar_and_add(vectors, scalars):
 def subtract_vectors(minuend, subtrahend):
     """Return difference of two vectors"""
     return tuple(z[0] - z[1] for z in zip(minuend, subtrahend))
-
 
 
 ## @param cell Tuple representing cell
@@ -220,9 +218,7 @@ def get_alternative_sum(coefficient_lists):
 ## @param dim Dimmension of tessellation
 ## @return Coefficients of growth polynomial corresponding to cells with dimmension dim - 1
 def calculate_coefficients_based_ne_euler_charcteristics(coefficient_lists, max_dimmension_coefficients, dim):
-"""
-Calculates coefficients of polynomial corresponding to a cell with dimension dim - 1
-"""
+"""Calculates coefficients of polynomial corresponding to a cell with dimension dim - 1"""
     return_list = get_alternative_sum(coefficient_lists)
     return_list[-1] = return_list[-1] - 1
     if dim % 2 == 0:

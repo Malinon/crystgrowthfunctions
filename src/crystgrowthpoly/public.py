@@ -1,4 +1,4 @@
-""" Functions"""
+"""Class representing tessellations and methods for calculating growth functions"""
 import crystgrowthpoly.private as cryst_private
 import crystgrowthpoly.visualisation as cryst_visualisation
 import crystgrowthpoly.growth_function as gf
@@ -7,13 +7,11 @@ from sage.all import *
 
 ## @param cells Sorted (by cells dimmension) list of cells list
 ## @param translation_vectors  Vectors generating tessellation
-## @param symmetric_growth True, if growth is the same in each direction. False otherwise.
+## @param symmetric_growth If True, then number of  motif's translation is the same in each of the basic directions
 ## @param normalized Normalization can be described as dividing argument by 2
-## @return Triple of growth functions @ref growth_function . Functions are sorted ascending by dimmensions of corresponding cells.
+## @return Triple of growth functions @ref growth_function. Functions are sorted ascending by dimmensions of corresponding cells.
 def get_topological_growth_polynomials(cells, translation_vectors, symmetric_growth=True, normalized=True):
-"""
-Function finding topological growth functions
-"""
+"""Function finding topological growth functions"""
     dim = len(cells) - 1
     if symmetric_growth:
         args = tuple(tuple(i for j in range(dim)) for i in range(1, dim + 2))
@@ -50,14 +48,12 @@ Function finding topological growth functions
 ## @param faces 2-cells of r
 ## @param v1  Tessellation vector
 ## @param v2  Tessellation vector
-## @param x0  
+## @param x0  Starting point of the frame
 ## @param frame_scale_v1  frame_scale_v1 * v1 is used to define parallelogram frame
 ## @param frame_scale_v2  frame_scale_v2 * v2 is used to define parallelogram frame
-## @param symmetric_growth True, if growth is the same in each direction. False otherwise.
+## @param symmetric_growth If True, growth of the frame is the same in each of the basic directions
 def get_crystallographic_growth_functions(points, edges, faces, v1, v2, x0, frame_scale_v1 = 1, frame_scale_v2 = 1, symmetric_growth=True):
-"""
-Function finding crystallographic_growth_functions
-"""
+""" Function finding crystallographic_growth_functions"""
     try:
         rational_scale_v1 = Rational(frame_scale_v1)
         rational_scale_v2 = Rational(frame_scale_v2)
@@ -111,9 +107,7 @@ Function finding crystallographic_growth_functions
         return (gf.growth_function(polynomials_0_cells, 2, 0, (K, L)), gf.growth_function(polynomials_1_cells, 2, 1, (K, L)), gf.growth_function(polynomials_2_cells, 2, 2, (K, L)))
 
 class Polygon:
-"""
-Class representing repeating motif
-"""
+"""Class representing repeating motif"""
     def __init__(self, cells):
         self.cells = list()
         self.cells.append(cells[0])
@@ -122,9 +116,7 @@ Class representing repeating motif
             self.cells.append(tuple(cryst_private.sort_points_in_cell(cell) for cell in cells[i]))
 
 class Tessellation:
-"""
-Class representing tessellation
-"""
+"""Class representing tessellation"""
     __FILE_PREFIXES = ("domains_parallelogram", "domains_lines_and_points")
     def __init__(self, polygon, cartesian_tessellation_vectors=None):
         self.polygon = polygon
@@ -133,7 +125,7 @@ Class representing tessellation
         self.cartesian_vectors = cartesian_tessellation_vectors
 
  
-##    @param symmetric_growth
+##    @param symmetric_growth If True, growth of the frame is the same in each of the basic directions
 ##    @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
 ##    @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
     def get_growth_polynomials_parallelogram(self, scale_v1 = 1, scale_v2 = 1, x0 = (0,0), symmetric_growth=True):
@@ -143,9 +135,9 @@ Class representing tessellation
         return get_crystallographic_growth_functions(self.polygon.cells[0], self.polygon.cells[1], self.polygon.cells[2], self.translation_vectors[0],
                                                     self.translation_vectors[1], x0, frame_scale_v1 = scale_v1, frame_scale_v2 = scale_v2,
                                                    symmetric_growth=symmetric_growth)
-    @param symmetric_growth
-    @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
-    @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
+ ##   @param symmetric_growth If True, then number of  motif's translation is the same in each of the basic directions
+ ##   @param normalized Normalization of growth functions can be described as dividing functions' argument by 2.
+ ##   @return Tuple containing topological growth functions.  Growth functions are sorted ascending by dimmension of corresponding cells.
     def get_growth_polynomials(self, symmetric_growth=True, normalized = True):
     """ Calculates topological growth functions. """
         return get_topological_growth_polynomials(self.polygon.cells, self.translation_vectors, symmetric_growth, normalized)
@@ -166,9 +158,9 @@ Class representing tessellation
                             for e in self.polygon.cells[1])
         return G
 
-##    @brief Method for plotting orphic diagrams and describing them
+##   @brief Method for plotting orphic diagrams and describing them
 ##
-##   @param symmetric_growth True, if growth is the same in each direction, False otherwise.
+##   @param symmetric_growth If True, growth of the frame is the same in each of the basic directions
 ##   @param full_plot=False If False, only plot of 2-d domains is created
 ##   @param description If True, textual description of domains is printed.
 ##   @param export_format Format of exported image. Supported values: ".eps", ".pdf", ".pgf", ".png", ".ps", ".svg,"
@@ -189,7 +181,7 @@ Class representing tessellation
 1) plots orphic diagrams and describe them in textual form or
 2) returns instance of class @ref RegionsDescription
 
-    The mode of operation of the function depends on the argument return_object"""
+The mode of operation of the function depends on the argument "return_object" """
         regions_desc = cryst_visualisation.find_regions(self, symmetric_growth, full_plot=full_plot)
         if return_object:
             return regions_desc
@@ -213,7 +205,7 @@ Class representing tessellation
 ##
 ##@return Instance of Tessellation class based on input file
 def read_tessellation_from_file(file_path, cartesian_vectors_included=True, dim=2, crystallographic_coordinates=True):
-    '''Reads tessellation from file
+'''Reads tessellation from file
 
 Input File Format:
     The first line shows the number of cells in each dimension sorted in ascending order with respect to the cell dimension.

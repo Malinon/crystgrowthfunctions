@@ -41,13 +41,11 @@ create_diagrams = True
 crystallographic_coordinates = True
 full_plot = False
 
-
 def handle_argument(index):
     if sys.argv[index] == "--help":
         print(HELP_MESSAGE)
     elif sys.argv[index] == "--dim":
         global dim
-        print("aaa")
         dim = int(sys.argv[index + 1])
         return index + 2
     elif sys.argv[index] == "--no_diagrams":
@@ -77,7 +75,6 @@ while True:
     if answer == "N" or answer == "y":
         break
 # Read tessellation
-print("dim", dim)
 tes = cryst.read_tessellation_from_file(file_path=file_path, cartesian_vectors_included=cartesian_vectors_included,
                                         dim=dim, crystallographic_coordinates=crystallographic_coordinates)
 # Present topological growth functions

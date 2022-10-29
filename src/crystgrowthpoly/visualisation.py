@@ -6,13 +6,13 @@ import itertools
 def calculate_mantisse(x):
     return x - floor(x)
 
-## @param Vertices from fragment of tessellation
+## @param Vertices from repeating motif
 ## @param coordinates Starting coordinate
 ## @param is_vertical If True, then v = v1. If False, then v = v2
 ##
-## @return Number describingW maximum translation along vector v for which the set of vertices contained within a frame remain unchanged.
+## @return Number describing maximum translation along vector v for which the set of vertices contained within a frame remains unchanged.
 def find_mantisse(tes, coordinate, is_vertical):
-"""Finds the maximum translation along vector v for which the set of vertices contained within a frame remain unchanged."""
+"""Finds the maximum translation along vector v for which the set of vertices contained within a frame remains unchanged."""
     if is_vertical:
         index = 0
     else:
@@ -126,7 +126,7 @@ class SpecialPoint:
         return(self.growth_f[0].polynomials, self.growth_f[1].polynomials, self.growth_f[2].polynomials)
 
 class RegionsDescription:
-"""This class describes all regions of ophic diagram."""
+"""This class describes all regions of orphic diagram."""
     def __init__(self, regions_lists, dimmension, tessellation):
         self.regions_lists = regions_lists
         self.__dimmension = dimmension
@@ -173,7 +173,7 @@ class RegionsDescription:
         return censoring_polygon
 
     ## @param repetition_of_unit_cells Pair of pairs defining number of copies of unit cells in each directions
-    ## @param colors_lists pair containing list of colors (First for 2-d regions, second for 1-d, 0-d regions)
+    ## @param colors_lists Pair containing list of colors (First for 2-d regions, second for 1-d, 0-d regions)
     ## @param repetition_of_polygon Pair of pairs defining number of copies of polygon in each directions
     ## @param fit_image If true, then polygon drawings outside colored unit cells are not visible
     ## @return Tuple containing demanded plots
@@ -241,16 +241,14 @@ class RegionsDescription:
             print("***************************")
 
 ## @param tessellation Instansce of Tessellation class
-## @symmetric_growth If True, growth of the frame is the same in each directions
-## @param full_plot
+## @param symmetric_growth If True, growth of the frame is the same in each of the basic directions
+## @param full_plot If False, only plot for 2-dimmensional regions (parallelograms) are created
+## @return Instansce of class RegionsDescription 
 def find_regions(tessellation, symmetric_growth=True, full_plot=False):
+    """Find regions within which growth functions are identical."""
     points = tessellation.polygon.cells[0]
     regions_lists = [] # Based on this list RegionsDescription object is constructed
     tes = set(points)
-    # Create fragment of tessellation
-    """for k in range(-1, 4):
-        for l in range(-1, 4):
-            cryst_private.add_cells(tes, points, cryst_private.multiply_by_scalar_and_add([(1,0), (0,1)], [k, l]), cryst_private.translate_vector)"""
     x_endpoints = find_boundary_lines(tes, True)
     y_endpoints = find_boundary_lines(tes, False)
     # This step is needed to eliminate not necessey edges and vertices from plot 

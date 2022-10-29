@@ -4,7 +4,7 @@ import itertools
 import functools
 
 class growth_function:
-    """This class represents growth function"""
+    """This class represents growth functions"""
     __PREDICATE_FORM_1_VARIABLE = "If n mod {} = {}, then"
     __PREDICATE_FORM_2_VARIABLES = "If k mod {} = {} and l mod {} = {}, then"
     def convert_coefficients_to_polynomial(self, coefficients, number_of_variables, normalized=True):
