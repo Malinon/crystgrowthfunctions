@@ -41,27 +41,27 @@ Input File Format:
     Higher dimensional cells are encoded with vertex indices.
     The last two lines contain information about translation vectors
 
-Example input file:
-    6 6 1
-        0     0
-        1/3  -1/3
-        1     0
-        4/3   2/3
-        1     1
-        1/3   2/3
-    1 2
-    2 3
-    3 4
-    4 5
-    5 6
-    6 1
-    1 2 3 4 5 6
-    1 0
-    -1/2 sqrt(3)/2
+Example input file:\
+    6 6 1\
+        0     0\
+        1/3  -1/3\
+        1     0\
+        4/3   2/3\
+        1     1\
+        1/3   2/3\
+    1 2\
+    2 3\
+    3 4\
+    4 5\
+    5 6\
+    6 1\
+    1 2 3 4 5 6\
+    1 0\
+    -1/2 sqrt(3)/2\
 
 # Contact
 
 If you have any questions regarding the package, comments or found error, please contact me.   
-E-mail: jakmal7@st.amu.edu.pl
+E-mail: jakub.malinowski@pwr.edu.pl
 
 
